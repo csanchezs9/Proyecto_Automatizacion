@@ -1,0 +1,319 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Catálogo de Productos - Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .endpoint-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .endpoint-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        .btn {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .btn-success { background-color: #27ae60; }
+        .btn-success:hover { background-color: #229954; }
+        .btn-warning { background-color: #f39c12; }
+        .btn-warning:hover { background-color: #e67e22; }
+        .btn-danger { background-color: #e74c3c; }
+        .btn-danger:hover { background-color: #c0392b; }
+        
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .result-success {
+            background-color: #d5f4e6;
+            border: 1px solid #27ae60;
+            color: #155724;
+        }
+        .result-error {
+            background-color: #f8d7da;
+            border: 1px solid #e74c3c;
+            color: #721c24;
+        }
+        .loading {
+            display: none;
+            color: #3498db;
+            font-style: italic;
+        }
+        .server-status {
+            text-align: center;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .status-online {
+            background-color: #d5f4e6;
+            color: #155724;
+            border: 1px solid #27ae60;
+        }
+        .status-offline {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #e74c3c;
+        }
+        .input-group {
+            margin: 10px 0;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group input {
+            width: 100px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 API Catálogo de Productos - Panel de Pruebas</h1>
+        
+        <div id="server-status" class="server-status status-offline">
+            🔴 Verificando estado del servidor...
+        </div>
+
+        <!-- Sección de productos -->
+        <div class="endpoint-section">
+            <h3 class="endpoint-title">📋 Gestión de Productos</h3>
+            <button class="btn btn-success" onclick="getAllProducts()">Obtener Todos los Productos</button>
+            <button class="btn btn-warning" onclick="getProductStats()">Ver Estadísticas</button>
+            
+            <div class="input-group">
+                <label for="productId">ID del Producto:</label>
+                <input type="number" id="productId" placeholder="Ej: 1" min="1">
+                <button class="btn" onclick="getProductById()">Buscar por ID</button>
+            </div>
+            
+            <div class="loading" id="products-loading">Cargando productos...</div>
+            <div id="products-result"></div>
+        </div>
+
+        <!-- Sección de PDFs -->
+        <div class="endpoint-section">
+            <h3 class="endpoint-title">📄 Generación de PDFs</h3>
+            <button class="btn btn-success" onclick="generatePDF()">Generar PDF Básico</button>
+            <button class="btn btn-warning" onclick="generateDetailedPDF()">Generar PDF Detallado</button>
+            
+            <div class="loading" id="pdf-loading">Generando PDF...</div>
+            <div id="pdf-result"></div>
+        </div>
+
+        <!-- Sección de utilidades -->
+        <div class="endpoint-section">
+            <h3 class="endpoint-title">🛠️ Utilidades</h3>
+            <button class="btn" onclick="checkHealth()">Estado del Servidor</button>
+            <button class="btn btn-danger" onclick="clearResults()">Limpiar Resultados</button>
+            
+            <div class="loading" id="utils-loading">Ejecutando...</div>
+            <div id="utils-result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000';
+
+        window.onload = function() {
+            checkServerStatus();
+        };
+
+        function checkServerStatus() {
+            console.log('Verificando estado del servidor...');
+            fetch(API_BASE_URL + '/health')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Servidor online:', data);
+                    const statusEl = document.getElementById('server-status');
+                    statusEl.className = 'server-status status-online';
+                    statusEl.innerHTML = '🟢 Servidor Online - API funcionando correctamente';
+                })
+                .catch(error => {
+                    console.error('Error al conectar con servidor:', error);
+                    const statusEl = document.getElementById('server-status');
+                    statusEl.className = 'server-status status-offline';
+                    statusEl.innerHTML = '🔴 Servidor Offline - Verificar que esté ejecutándose en puerto 3000';
+                });
+        }
+
+        function showLoading(section) {
+            const loadingEl = document.getElementById(section + '-loading');
+            if (loadingEl) loadingEl.style.display = 'block';
+        }
+
+        function hideLoading(section) {
+            const loadingEl = document.getElementById(section + '-loading');
+            if (loadingEl) loadingEl.style.display = 'none';
+        }
+
+        function showResult(section, content, isError) {
+            const resultEl = document.getElementById(section + '-result');
+            if (resultEl) {
+                resultEl.className = 'result ' + (isError ? 'result-error' : 'result-success');
+                resultEl.innerHTML = content;
+            }
+            hideLoading(section);
+        }
+
+        function getAllProducts() {
+            console.log('Obteniendo todos los productos...');
+            showLoading('products');
+            fetch(API_BASE_URL + '/api/products')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Productos obtenidos:', data);
+                    const formatted = JSON.stringify(data, null, 2);
+                    showResult('products', formatted, false);
+                })
+                .catch(error => {
+                    console.error('Error al obtener productos:', error);
+                    showResult('products', 'Error: ' + error.message, true);
+                });
+        }
+
+        function getProductById() {
+            const id = document.getElementById('productId').value;
+            if (!id) {
+                showResult('products', 'Por favor, ingresa un ID de producto válido', true);
+                return;
+            }
+
+            console.log('Obteniendo producto por ID:', id);
+            showLoading('products');
+            fetch(API_BASE_URL + '/api/products/' + id)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Producto obtenido:', data);
+                    const formatted = JSON.stringify(data, null, 2);
+                    showResult('products', formatted, false);
+                })
+                .catch(error => {
+                    console.error('Error al obtener producto:', error);
+                    showResult('products', 'Error: ' + error.message, true);
+                });
+        }
+
+        function getProductStats() {
+            console.log('Obteniendo estadísticas...');
+            showLoading('products');
+            fetch(API_BASE_URL + '/api/products/stats')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Estadísticas obtenidas:', data);
+                    const formatted = JSON.stringify(data, null, 2);
+                    showResult('products', formatted, false);
+                })
+                .catch(error => {
+                    console.error('Error al obtener estadísticas:', error);
+                    showResult('products', 'Error: ' + error.message, true);
+                });
+        }
+
+        function generatePDF() {
+            console.log('Generando PDF básico...');
+            showLoading('pdf');
+            const link = document.createElement('a');
+            link.href = API_BASE_URL + '/api/products/pdf';
+            link.download = 'catalogo-productos.pdf';
+            link.click();
+            
+            setTimeout(function() {
+                showResult('pdf', '✅ PDF generado y descargado exitosamente', false);
+            }, 1000);
+        }
+
+        function generateDetailedPDF() {
+            console.log('Generando PDF detallado...');
+            showLoading('pdf');
+            const link = document.createElement('a');
+            link.href = API_BASE_URL + '/api/products/pdf/detailed';
+            link.download = 'catalogo-detallado.pdf';
+            link.click();
+            
+            setTimeout(function() {
+                showResult('pdf', '✅ PDF detallado generado y descargado exitosamente', false);
+            }, 1000);
+        }
+
+        function checkHealth() {
+            console.log('Verificando salud del servidor...');
+            showLoading('utils');
+            fetch(API_BASE_URL + '/health')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Estado del servidor:', data);
+                    const formatted = JSON.stringify(data, null, 2);
+                    showResult('utils', formatted, false);
+                })
+                .catch(error => {
+                    console.error('Error al verificar servidor:', error);
+                    showResult('utils', 'Error: ' + error.message, true);
+                });
+        }
+
+        function clearResults() {
+            console.log('Limpiando resultados...');
+            const resultElements = document.querySelectorAll('[id$="-result"]');
+            resultElements.forEach(function(el) {
+                el.innerHTML = '';
+            });
+            
+            const loadingElements = document.querySelectorAll('[id$="-loading"]');
+            loadingElements.forEach(function(el) {
+                el.style.display = 'none';
+            });
+            
+            showResult('utils', '✅ Resultados limpiados', false);
+        }
+
+        setInterval(checkServerStatus, 30000);
+    </script>
+</body>
+</html>
