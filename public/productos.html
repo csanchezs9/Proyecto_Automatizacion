@@ -229,6 +229,7 @@
                 .then(response => response.json())
                 .then(data => {
                     console.log('Productos obtenidos:', data);
+                    console.log('Primer producto:', data.data?.[0]); // Para ver la estructura exacta
                     displayProducts(data);
                 })
                 .catch(error => {
@@ -270,7 +271,15 @@
                     products.forEach(product => {
                         if (product && typeof product === 'object') {
                             const productId = product.id || product.Id || product.ID || 'N/A';
-                            const productImage = product.image || product.imagen || product.Image || product.photo || product.foto || null;
+                            const productImage = product.imagen_url || product.image || product.imagen || product.Image || product.photo || product.foto || null;
+                            
+                            // Debug log para ver las imágenes
+                            console.log(`Producto ${productId}:`, {
+                                imagen_url: product.imagen_url,
+                                image: product.image,
+                                imagen: product.imagen,
+                                productImage: productImage
+                            });
                             
                             html += `
                                 <div class="product-card">
@@ -281,9 +290,9 @@
                                     }
                                     <div class="product-content">
                                         <div class="product-id">ID: ${productId}</div>
-                                        <div class="product-name">${product.name || product.nombre || product.Name || product.title || product.titulo || 'Producto sin nombre'}</div>
-                                        <div class="product-description">${product.description || product.descripcion || product.Description || product.desc || 'Sin descripción disponible'}</div>
-                                        <div class="product-price">$${product.price || product.precio || product.Price || product.cost || product.costo || '0.00'}</div>
+                                        <div class="product-name">${product.nombre || product.name || product.Name || product.title || product.titulo || 'Producto sin nombre'}</div>
+                                        <div class="product-description">${product.descripcion || product.description || product.Description || product.desc || 'Sin descripción disponible'}</div>
+                                        <div class="product-price">$${product.precio || product.price || product.Price || product.cost || product.costo || '0.00'}</div>
                                         <div class="product-category">${product.category || product.categoria || product.Category || product.type || product.tipo || 'Sin categoría'}</div>
                                         <div class="product-actions">
                                             <button class="btn-action btn-edit" onclick="editProduct('${productId}')">Editar</button>
