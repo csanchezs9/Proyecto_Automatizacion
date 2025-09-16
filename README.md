@@ -15,7 +15,7 @@ npm o yarn
 # Configuración
 Clonar el repositorio y navegar al directorio:
 bashgit clone <url-del-repositorio>
-cd Proyecto-automatizacion
+cd Proyecto-automatizaciondd
 
 # Instalar dependencias:
 
