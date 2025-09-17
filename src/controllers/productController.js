@@ -98,22 +98,16 @@ class ProductController {
       // Generar el PDF
       await PDFService.generateProductsPDF(result.rows, outputPath);
 
-      // Enviar el archivo como respuesta
-      res.download(outputPath, fileName, (err) => {
-        if (err) {
-          console.error('Error al enviar el archivo:', err);
-          return res.status(500).json({
-            success: false,
-            message: 'Error al generar el PDF'
-          });
+      // Retornar información del archivo generado
+      res.status(200).json({
+        success: true,
+        message: 'PDF generado exitosamente',
+        data: {
+          filename: fileName,
+          downloadUrl: `/api/products/download/${fileName}`,
+          timestamp: new Date().toISOString(),
+          totalProducts: result.rows.length
         }
-
-        // Eliminar el archivo después de enviarlo (opcional)
-        setTimeout(() => {
-          if (fs.existsSync(outputPath)) {
-            fs.unlinkSync(outputPath);
-          }
-        }, 5000); // Eliminar después de 5 segundos
       });
 
     } catch (error) {
@@ -213,6 +207,48 @@ class ProductController {
       res.status(500).json({
         success: false,
         message: 'Error al obtener estadísticas',
+        error: error.message
+      });
+    }
+  }
+
+  // Descargar archivo PDF generado
+  static async downloadPDF(req, res) {
+    try {
+      const { filename } = req.params;
+      const filePath = path.join(__dirname, '../../uploads', filename);
+
+      // Verificar que el archivo existe
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({
+          success: false,
+          message: 'Archivo no encontrado'
+        });
+      }
+
+      // Enviar el archivo para descarga
+      res.download(filePath, filename, (err) => {
+        if (err) {
+          console.error('Error al descargar archivo:', err);
+          return res.status(500).json({
+            success: false,
+            message: 'Error al descargar el archivo'
+          });
+        }
+
+        // Eliminar el archivo después de descargarlo
+        setTimeout(() => {
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        }, 10000); // Eliminar después de 10 segundos
+      });
+
+    } catch (error) {
+      console.error('Error en descarga:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
         error: error.message
       });
     }

@@ -258,7 +258,6 @@
         <div class="endpoint-section">
             <h3 class="endpoint-title">📄 Generación de PDFs</h3>
             <button class="btn btn-success" onclick="generatePDF()">Generar PDF Básico</button>
-            <button class="btn btn-warning" onclick="generateDetailedPDF()">Generar PDF Detallado</button>
             
             <div class="loading" id="pdf-loading">Generando PDF...</div>
             <div id="pdf-result"></div>
@@ -449,27 +448,35 @@
         function generatePDF() {
             console.log('Generando PDF básico...');
             showLoading('pdf');
-            const link = document.createElement('a');
-            link.href = API_BASE_URL + '/api/products/pdf';
-            link.download = 'catalogo-productos.pdf';
-            link.click();
             
-            setTimeout(function() {
-                showResult('pdf', '✅ PDF generado y descargado exitosamente', false);
-            }, 1000);
-        }
-
-        function generateDetailedPDF() {
-            console.log('Generando PDF detallado...');
-            showLoading('pdf');
-            const link = document.createElement('a');
-            link.href = API_BASE_URL + '/api/products/pdf/detailed';
-            link.download = 'catalogo-detallado.pdf';
-            link.click();
-            
-            setTimeout(function() {
-                showResult('pdf', '✅ PDF detallado generado y descargado exitosamente', false);
-            }, 1000);
+            fetch(API_BASE_URL + '/api/products/pdf')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('PDF generado:', data);
+                    if (data.success) {
+                        const downloadUrl = API_BASE_URL + data.data.downloadUrl;
+                        const resultHtml = `
+                            <div class="result-success">
+                                ✅ PDF generado exitosamente<br>
+                                📄 Archivo: ${data.data.filename}<br>
+                                📊 Total productos: ${data.data.totalProducts}<br>
+                                🕒 Generado: ${new Date(data.data.timestamp).toLocaleString()}<br><br>
+                                <a href="${downloadUrl}" target="_blank" 
+                                   class="btn btn-success" 
+                                   style="text-decoration: none; display: inline-block; margin-top: 10px;">
+                                   📥 Descargar PDF
+                                </a>
+                            </div>
+                        `;
+                        showResult('pdf', resultHtml, false);
+                    } else {
+                        showResult('pdf', 'Error: ' + data.message, true);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al generar PDF:', error);
+                    showResult('pdf', 'Error: ' + error.message, true);
+                });
         }
 
         function checkHealth() {
