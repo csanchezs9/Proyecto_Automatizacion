@@ -277,6 +277,155 @@
             background: linear-gradient(135deg, #ef444410, #dc262610);
         }
 
+        /* Form Container */
+        .form-container {
+            margin: 1.5rem 0;
+            padding: 2rem;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border: 1px solid #475569;
+            border-radius: 16px;
+            animation: slideDown 0.3s ease;
+        }
+
+        .form-container h3 {
+            color: #00d4ff;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .form-container textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        /* Product Cards */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .product-card {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border: 1px solid #475569;
+            border-radius: 12px;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+            border-color: #00d4ff;
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.1);
+        }
+
+        .product-id {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 0.1rem;
+            font-weight: 400;
+        }
+
+        .product-image {
+            width: 100%;
+            height: auto;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-bottom: 0.3rem;
+            border: 1px solid #475569;
+            transition: all 0.3s ease;
+            background: rgba(15, 23, 42, 0.3);
+        }
+
+        .product-image:hover {
+            border-color: #00d4ff;
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.1);
+        }
+
+        .product-image-placeholder {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(135deg, #334155, #475569);
+            border-radius: 8px;
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 0.9rem;
+            border: 1px solid #475569;
+        }
+
+        .product-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.05rem;
+        }
+
+        .product-description {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            line-height: 1.3;
+            margin-bottom: 0.15rem;
+        }
+
+        .product-price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #22c55e;
+            margin-bottom: 0.2rem;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: 1px solid #dc2626;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+        }
+
+        .btn-delete:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-delete i {
+            font-size: 0.8rem;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .loading {
             color: #00d4ff;
             display: flex;
@@ -595,10 +744,51 @@
                             <i class="fas fa-list"></i>
                             Obtener Todos los Productos
                         </button>
+                        <button class="btn" onclick="toggleAddProductForm()">
+                            <i class="fas fa-plus"></i>
+                            Agregar Nuevo Producto
+                        </button>
                         <button class="btn" onclick="getProductStats()">
                             <i class="fas fa-chart-bar"></i>
                             Ver Estadísticas
                         </button>
+                    </div>
+
+                    <!-- Formulario para agregar producto -->
+                    <div id="addProductForm" class="form-container" style="display: none;">
+                        <h3>Agregar Nuevo Producto</h3>
+                        <div class="input-group">
+                            <label for="productName">Nombre del Producto:</label>
+                            <input type="text" id="productName" placeholder="Tu producto">
+                        </div>
+                        <div class="input-group">
+                            <label for="productDescription">Descripción:</label>
+                            <input type="text" id="productDescription" placeholder="Descripción detallada del producto" rows="3"></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label for="productPrice">Precio:</label>
+                            <input type="number" id="productPrice" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <div class="input-group">
+                            <label for="productImage">Imagen del Producto:</label>
+                            <input type="file" id="productImage" accept="image/*" onchange="previewImage(this)">
+                            <small style="color: #64748b; margin-top: 0.5rem; display: block;">
+                                Formatos permitidos: JPG, PNG, WEBP. Máximo 5MB.
+                            </small>
+                        </div>
+                        <div id="imagePreview" style="display: none; margin: 1rem 0;">
+                            <img id="previewImg" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 1px solid #475569;">
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn" onclick="createProduct()">
+                                <i class="fas fa-save"></i>
+                                Guardar Producto
+                            </button>
+                            <button class="btn btn-secondary" onclick="cancelAddProduct()">
+                                <i class="fas fa-times"></i>
+                                Cancelar
+                            </button>
+                        </div>
                     </div>
 
                     <div class="input-group">
@@ -699,6 +889,10 @@
 
     <script>
         const API_BASE_URL = 'http://localhost:3000';
+        
+        // Configuración de Supabase
+        const SUPABASE_URL = 'https://xdhymmzmxbaxxmregzuh.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkaHltbXpteGJheHhtcmVnenVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY1NzcyMTMsImV4cCI6MjA0MjE1MzIxM30.zNzNn0xgXOx_XKu_EiEhRkK9g6CJ7iWZJZ8p4vJH0cY';
 
         window.onload = function() {
             checkServerStatus();
@@ -764,6 +958,27 @@
             resultElement.innerHTML = content;
         }
 
+        // Función para construir URL de imagen de Supabase (misma lógica que el PDF)
+        function buildSupabaseImageUrl(imageUrl) {
+            if (!imageUrl || imageUrl === 'Sin imagen' || imageUrl.trim() === '') {
+                return null;
+            }
+
+            let finalUrl = imageUrl.trim();
+            
+            // Si ya es una URL completa, usarla directamente
+            if (!finalUrl.startsWith('http')) {
+                // Es solo el nombre del archivo, construir URL completa
+                finalUrl = `https://xdhymmzmxbaxxmregzuh.supabase.co/storage/v1/object/public/imagenes/${finalUrl}`;
+            } else if (finalUrl.includes('supabase.co') && !finalUrl.includes('/storage/v1/object/public/')) {
+                // Convertir URL de Supabase a formato público
+                const fileName = finalUrl.split('/').pop() || finalUrl;
+                finalUrl = `https://xdhymmzmxbaxxmregzuh.supabase.co/storage/v1/object/public/imagenes/${fileName}`;
+            }
+
+            return finalUrl;
+        }
+
         function getAllProducts() {
             showLoading('products');
             fetch(`${API_BASE_URL}/api/products`)
@@ -772,12 +987,32 @@
                     if (data.success) {
                         let html = '<div class="products-grid">';
                         data.data.forEach(product => {
+                            const imageUrl = buildSupabaseImageUrl(product.imagen_url);
+                            
                             html += `
                                 <div class="product-card">
-                                    <div class="product-id">ID: ${product.id}</div>
+                                    ${imageUrl ? 
+                                        `<img src="${imageUrl}" alt="${product.nombre}" class="product-image" 
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                         <div class="product-image-placeholder" style="display: none;">
+                                             <i class="fas fa-image" style="margin-right: 0.5rem;"></i>
+                                             Sin imagen
+                                         </div>` 
+                                        : 
+                                        `<div class="product-image-placeholder">
+                                             <i class="fas fa-image" style="margin-right: 0.5rem;"></i>
+                                             Sin imagen
+                                         </div>`
+                                    }
                                     <div class="product-name">${product.nombre || 'Sin nombre'}</div>
+                                    <div class="product-id">ID: ${product.id}</div>
                                     <div class="product-description">${product.descripcion || 'Sin descripción'}</div>
                                     <div class="product-price">$${product.precio || '0'}</div>
+                                    <div class="product-actions">
+                                        <button class="btn-delete" onclick="deleteProduct('${product.id}')" title="Eliminar producto">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             `;
                         });
@@ -921,6 +1156,193 @@
             const results = document.querySelectorAll('.result');
             results.forEach(result => {
                 result.style.display = 'none';
+            });
+        }
+
+        // Funciones para agregar productos
+        function toggleAddProductForm() {
+            const form = document.getElementById('addProductForm');
+            if (form.style.display === 'none' || form.style.display === '') {
+                form.style.display = 'block';
+                clearProductForm();
+            } else {
+                form.style.display = 'none';
+            }
+        }
+
+        function clearProductForm() {
+            document.getElementById('productName').value = '';
+            document.getElementById('productDescription').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productImage').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+        }
+
+        // Función para previsualizar imagen
+        function previewImage(input) {
+            const file = input.files[0];
+            const preview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+
+            if (file) {
+                // Validar tamaño (5MB máximo)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('La imagen es demasiado grande. Máximo 5MB permitido.');
+                    input.value = '';
+                    preview.style.display = 'none';
+                    return;
+                }
+
+                // Validar formato
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Formato no permitido. Use JPG, PNG o WEBP.');
+                    input.value = '';
+                    preview.style.display = 'none';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+        // Función para subir imagen a Supabase Storage
+        async function uploadImageToSupabase(file) {
+            try {
+                // Generar nombre único para el archivo
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+                
+                // Crear FormData para la subida
+                const formData = new FormData();
+                formData.append('file', file);
+
+                // Subir a Supabase Storage
+                const response = await fetch(`${SUPABASE_URL}/storage/v1/object/imagenes/${fileName}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    return fileName; // Retornar solo el nombre del archivo
+                } else {
+                    const error = await response.text();
+                    console.error('Error al subir imagen:', error);
+                    throw new Error('Error al subir la imagen a Supabase');
+                }
+            } catch (error) {
+                console.error('Error en uploadImageToSupabase:', error);
+                throw error;
+            }
+        }
+
+        function cancelAddProduct() {
+            document.getElementById('addProductForm').style.display = 'none';
+            clearProductForm();
+        }
+
+        async function createProduct() {
+            const name = document.getElementById('productName').value.trim();
+            const description = document.getElementById('productDescription').value.trim();
+            const price = document.getElementById('productPrice').value;
+            const imageFile = document.getElementById('productImage').files[0];
+
+            // Validaciones
+            if (!name) {
+                showResult('products', 'Error: El nombre del producto es obligatorio', true);
+                return;
+            }
+
+            if (!description) {
+                showResult('products', 'Error: La descripción del producto es obligatoria', true);
+                return;
+            }
+
+            if (!price || parseFloat(price) < 0) {
+                showResult('products', 'Error: El precio debe ser un número válido mayor o igual a 0', true);
+                return;
+            }
+
+            showLoading('products');
+
+            try {
+                let imageUrl = null;
+
+                // Subir imagen si se seleccionó una
+                if (imageFile) {
+                    showResult('products', 'Subiendo imagen...', false);
+                    imageUrl = await uploadImageToSupabase(imageFile);
+                }
+
+                const productData = {
+                    nombre: name,
+                    descripcion: description,
+                    precio: parseFloat(price),
+                    imagen_url: imageUrl
+                };
+
+                showResult('products', 'Guardando producto...', false);
+
+                const response = await fetch(`${API_BASE_URL}/api/products`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(productData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult('products', `✅ Producto creado exitosamente!\n\nID: ${data.data.id}\nNombre: ${data.data.nombre}\nPrecio: $${data.data.precio}${imageUrl ? '\nImagen: Subida correctamente' : ''}`, false);
+                    cancelAddProduct();
+                    // Actualizar la lista de productos automáticamente
+                    setTimeout(() => {
+                        getAllProducts();
+                    }, 1000);
+                } else {
+                    showResult('products', `Error al crear producto: ${data.message}`, true);
+                }
+            } catch (error) {
+                showResult('products', `Error: ${error.message}`, true);
+            }
+        }
+
+        // Función para eliminar productos
+        function deleteProduct(productId) {
+            if (!confirm(`¿Estás seguro de que quieres eliminar el producto con ID: ${productId}?`)) {
+                return;
+            }
+
+            showLoading('products');
+
+            fetch(`${API_BASE_URL}/api/products/${productId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showResult('products', `✅ Producto eliminado exitosamente!\n\nID eliminado: ${productId}`, false);
+                    // Actualizar la lista de productos automáticamente
+                    setTimeout(() => {
+                        getAllProducts();
+                    }, 1000);
+                } else {
+                    showResult('products', `Error al eliminar producto: ${data.message}`, true);
+                }
+            })
+            .catch(error => {
+                showResult('products', `Error de conexión: ${error.message}`, true);
             });
         }
 
