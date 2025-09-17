@@ -27,15 +27,17 @@ class PDFService {
 
       console.log(`🔍 Descargando: ${finalUrl}`);
 
-      // Descargar imagen con mejor manejo de errores
+      // Descargar imagen con mejor manejo de errores y configuración optimizada
       const response = await new Promise((resolve, reject) => {
         const request = https.get(finalUrl, {
+          timeout: 15000, // Más tiempo para imágenes de mayor calidad
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+            'Accept': 'image/jpeg,image/png,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.9',
             'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
+            'Pragma': 'no-cache',
+            'Accept-Encoding': 'gzip, deflate'
           }
         }, (response) => {
           console.log(`📡 Status ${response.statusCode} para ${finalUrl}`);
@@ -83,12 +85,14 @@ class PDFService {
 
       try {
         const image = await Jimp.read(response);
+        
+        // Mejorar la calidad significativamente para el nuevo layout 3x3
         const compressedBuffer = await image
-          .resize(60, 60)  // Tamaño para el nuevo layout
-          .quality(65)     // Calidad balanceada
+          .resize(200, 200)    // Tamaño mucho más grande para mejor calidad
+          .quality(85)         // Calidad alta para imágenes nítidas
           .getBufferAsync(Jimp.MIME_JPEG);
 
-        console.log(`🎯 Comprimido: ${compressedBuffer.length} bytes`);
+        console.log(`🎯 Comprimido: ${compressedBuffer.length} bytes (alta calidad)`);
         return compressedBuffer;
       } catch (jimpError) {
         // Si Jimp falla, devolver la imagen original sin comprimir
@@ -157,37 +161,29 @@ class PDFService {
   static async generateProductsPDF(products, outputPath) {
     return new Promise(async (resolve, reject) => {
       try {
-        console.log('🚀 Generando PDF optimizado con imágenes comprimidas...');
+        console.log('🚀 Generando catálogo PDF profesional...');
         const startTime = Date.now();
 
-        // Configuración optimizada
+        // Configuración profesional del documento
         const doc = new PDFDocument({ 
-          margin: 15,
+          margin: 40,
           compress: true,
           size: 'A4',
           bufferPages: true,
           info: {
-            Title: 'Catálogo Productos',
-            Author: 'Sistema'
+            Title: 'Catálogo de Productos',
+            Author: 'Sistema de Automatización',
+            Subject: 'Catálogo de Productos',
+            Keywords: 'catálogo, productos, PDF'
           }
         });
         
         const stream = fs.createWriteStream(outputPath);
         doc.pipe(stream);
 
-        // Título compacto
-        doc.fontSize(14)
-           .font('Helvetica-Bold')
-           .text('CATÁLOGO DE PRODUCTOS', { align: 'center' });
-
-        doc.fontSize(8)
-           .font('Helvetica')
-           .text(new Date().toLocaleDateString('es-ES'), { align: 'right' })
-           .moveDown(0.3);
-
-        // Descargar y comprimir todas las imágenes en lotes
-        console.log('📥 Descargando y comprimiendo imágenes...');
-        const imageResults = await PDFService.downloadImagesInBatches(products, 5);
+        // Descargar y comprimir todas las imágenes en lotes de alta calidad
+        console.log('📥 Descargando imágenes en alta calidad...');
+        const imageResults = await PDFService.downloadImagesInBatches(products, 4);
         const imageMap = new Map();
         imageResults.forEach(result => {
           if (result.imageBuffer) {
@@ -195,65 +191,64 @@ class PDFService {
           }
         });
 
-        console.log(`📄 Generando contenido con imágenes... ${imageMap.size} imágenes descargadas`);
+        console.log(`📄 Generando contenido con ${imageMap.size} imágenes de alta calidad`);
 
-        // Layout optimizado: 4x5 compacto (20 productos por página)
-        let currentY = doc.y;
-        const cardHeight = 95;   // Altura más compacta
-        const imageSize = 60;    // Imágenes más pequeñas
-        const startX = 15;       // Margen reducido
-        const cardWidth = 140;   // Ancho para 4 columnas
-        const marginX = 8;       // Espaciado horizontal mínimo
-        const marginY = 5;       // Espaciado vertical mínimo
-        const productsPerRow = 4;
-        const rowsPerPage = 5;
-        const productsPerPage = productsPerRow * rowsPerPage; // 20 productos
+        // Configuración del layout optimizado para 3 columnas
+        const pageConfig = {
+          width: 595.28,      // Ancho A4 en puntos
+          height: 841.89,     // Alto A4 en puntos
+          margin: 40,         // Margen general
+          headerHeight: 80,   // Espacio para header
+          footerHeight: 40,   // Espacio para footer
+        };
 
-        // Generar productos en grid 4x5 con imágenes descargadas
-        for (let pageStart = 0; pageStart < products.length; pageStart += productsPerPage) {
+        const gridConfig = {
+          cols: 3,            // 3 columnas para tarjetas más grandes
+          rows: 3,            // 3 filas 
+          productsPerPage: 9, // 3x3 = 9 productos por página
+          cardWidth: 165,     // Ancho más grande para cada tarjeta
+          cardHeight: 200,    // Alto más grande para cada tarjeta
+          imageSize: 120,     // Imagen más grande y visible
+          spacing: 15,        // Más espaciado entre tarjetas
+        };
+
+        // Calcular posiciones del grid
+        const availableWidth = pageConfig.width - (pageConfig.margin * 2);
+        const availableHeight = pageConfig.height - pageConfig.headerHeight - pageConfig.footerHeight - (pageConfig.margin * 2);
+        
+        const totalSpacingX = (gridConfig.cols - 1) * gridConfig.spacing;
+        const totalSpacingY = (gridConfig.rows - 1) * gridConfig.spacing;
+        
+        gridConfig.cardWidth = (availableWidth - totalSpacingX) / gridConfig.cols;
+        gridConfig.cardHeight = (availableHeight - totalSpacingY) / gridConfig.rows;
+
+        let currentPage = 1;
+        
+        // Generar páginas del catálogo
+        for (let pageStart = 0; pageStart < products.length; pageStart += gridConfig.productsPerPage) {
           // Nueva página si no es la primera
           if (pageStart > 0) {
             doc.addPage();
-            currentY = 40;
+            currentPage++;
           }
 
-          console.log(`📄 Procesando página ${Math.floor(pageStart/productsPerPage) + 1}`);
+          // Renderizar header profesional
+          PDFService.renderHeader(doc, pageConfig, currentPage, Math.ceil(products.length / gridConfig.productsPerPage));
 
-          // Reiniciar Y para cada página
-          let pageY = currentY;
+          // Calcular productos para esta página
+          const pageProducts = products.slice(pageStart, pageStart + gridConfig.productsPerPage);
+          
+          console.log(`📄 Procesando página ${currentPage} con ${pageProducts.length} productos`);
 
-          // Procesar hasta 20 productos por página
-          for (let row = 0; row < rowsPerPage; row++) {
-            for (let col = 0; col < productsPerRow; col++) {
-              const productIndex = pageStart + (row * productsPerRow) + col;
-              
-              if (productIndex >= products.length) {
-                break; // No más productos
-              }
+          // Renderizar grid de productos
+          PDFService.renderProductsGrid(doc, pageProducts, pageConfig, gridConfig, imageMap);
 
-              const product = products[productIndex];
-              const x = startX + (col * (cardWidth + marginX));
-              const y = pageY + (row * (cardHeight + marginY));
-
-              // Renderizar producto con imagen del mapa
-              const productImage = imageMap.get(product.id);
-              await PDFService.renderProductCard(doc, product, x, y, cardWidth, cardHeight, imageSize, productImage);
-            }
-            
-            if (pageStart + ((row + 1) * productsPerRow) >= products.length) {
-              break; // No más productos en esta página
-            }
-          }
+          // Renderizar footer
+          PDFService.renderFooter(doc, pageConfig, currentPage, Math.ceil(products.length / gridConfig.productsPerPage));
         }
 
-        // Resumen final
-        currentY += 10;
-        doc.fontSize(8)
-           .font('Helvetica-Bold')
-           .text(`Total: ${products.length} productos | ${new Date().toLocaleTimeString('es-ES')}`, { align: 'center' });
-
         const endTime = Date.now();
-        console.log(`✅ PDF con imágenes comprimidas generado en ${endTime - startTime}ms`);
+        console.log(`✅ Catálogo PDF profesional generado en ${endTime - startTime}ms`);
 
         doc.end();
 
@@ -370,6 +365,198 @@ class PDFService {
        });
   }
 
+  // Renderizar header profesional del catálogo
+  static renderHeader(doc, pageConfig, currentPage, totalPages) {
+    const headerY = pageConfig.margin;
+    
+    // Fondo del header con gradiente simulado
+    doc.rect(pageConfig.margin, headerY, pageConfig.width - (pageConfig.margin * 2), pageConfig.headerHeight)
+       .fillAndStroke('#2c3e50', '#34495e');
+    
+    // Logo simulado (cuadrado azul como en la imagen)
+    const logoSize = 30;
+    const logoX = pageConfig.margin + 15;
+    const logoY = headerY + 15;
+    
+    doc.rect(logoX, logoY, logoSize, logoSize)
+       .fillAndStroke('#3498db', '#2980b9');
+    
+    // Título principal
+    doc.fontSize(18)
+       .font('Helvetica-Bold')
+       .fillColor('white')
+       .text('CATÁLOGO DE PRODUCTOS', logoX + logoSize + 20, logoY + 5);
+    
+    // Fecha en la esquina superior derecha
+    const dateText = new Date().toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric'
+    });
+    
+    doc.fontSize(12)
+       .font('Helvetica')
+       .fillColor('white')
+       .text(dateText, pageConfig.width - pageConfig.margin - 80, logoY + 8);
+    
+    // Línea separadora
+    doc.moveTo(pageConfig.margin, headerY + pageConfig.headerHeight)
+       .lineTo(pageConfig.width - pageConfig.margin, headerY + pageConfig.headerHeight)
+       .strokeColor('#bdc3c7')
+       .lineWidth(1)
+       .stroke();
+    
+    // Reset color para contenido siguiente
+    doc.fillColor('black');
+  }
+
+  // Renderizar grid de productos de forma profesional
+  static renderProductsGrid(doc, products, pageConfig, gridConfig, imageMap) {
+    const startY = pageConfig.margin + pageConfig.headerHeight + 20;
+    
+    for (let i = 0; i < products.length && i < gridConfig.productsPerPage; i++) {
+      const product = products[i];
+      const row = Math.floor(i / gridConfig.cols);
+      const col = i % gridConfig.cols;
+      
+      const x = pageConfig.margin + (col * (gridConfig.cardWidth + gridConfig.spacing));
+      const y = startY + (row * (gridConfig.cardHeight + gridConfig.spacing));
+      
+      PDFService.renderProductCardProfessional(doc, product, x, y, gridConfig, imageMap.get(product.id));
+    }
+  }
+
+  // Renderizar tarjeta de producto profesional
+  static renderProductCardProfessional(doc, product, x, y, gridConfig, preloadedImage = null) {
+    try {
+      // Marco con bordes redondeados simulados y sombra sutil
+      doc.rect(x, y, gridConfig.cardWidth, gridConfig.cardHeight)
+         .fillOpacity(0.05)
+         .fill('#ecf0f1')
+         .fillOpacity(1)
+         .strokeColor('#3498db')
+         .lineWidth(2)
+         .stroke();
+
+      // Área de imagen centrada
+      const imageSize = gridConfig.imageSize;
+      const imageX = x + (gridConfig.cardWidth - imageSize) / 2;
+      const imageY = y + 15;
+
+      // Renderizar imagen o placeholder con mejor calidad
+      if (preloadedImage) {
+        try {
+          // Usar la imagen de alta calidad con opciones optimizadas
+          doc.image(preloadedImage, imageX, imageY, { 
+            width: imageSize, 
+            height: imageSize,
+            fit: [imageSize, imageSize],
+            align: 'center',
+            valign: 'center'
+          });
+        } catch (imgErr) {
+          console.warn(`⚠️ Error al insertar imagen para ${product.id}:`, imgErr.message);
+          PDFService.renderPlaceholderProfessional(doc, imageX, imageY, imageSize);
+        }
+      } else {
+        PDFService.renderPlaceholderProfessional(doc, imageX, imageY, imageSize);
+      }
+
+      // Información del producto debajo de la imagen
+      const textStartY = imageY + imageSize + 10;
+      
+      // Nombre del producto - más prominente y con más espacio
+      const productName = (product.nombre || 'Sin nombre').substring(0, 35);
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor('#2c3e50')
+         .text(productName, x + 8, textStartY, { 
+           width: gridConfig.cardWidth - 16, 
+           align: 'center',
+           ellipsis: true
+         });
+
+      // Precio - más grande y destacado
+      const price = product.precio ? `$${parseFloat(product.precio).toLocaleString('es-ES')}` : '$0';
+      doc.fontSize(13)
+         .font('Helvetica-Bold')
+         .fillColor('#27ae60')
+         .text(price, x + 8, textStartY + 18, { 
+           width: gridConfig.cardWidth - 16, 
+           align: 'center'
+         });
+
+      // ID del producto - discreto pero legible
+      doc.fontSize(8)
+         .font('Helvetica')
+         .fillColor('#7f8c8d')
+         .text(`ID: ${product.id}`, x + 8, textStartY + 38, { 
+           width: gridConfig.cardWidth - 16, 
+           align: 'center'
+         });
+
+      // Reset color
+      doc.fillColor('black');
+
+    } catch (error) {
+      console.error(`❌ Error renderizando producto ${product.id}:`, error);
+    }
+  }
+
+  // Renderizar footer profesional
+  static renderFooter(doc, pageConfig, currentPage, totalPages) {
+    const footerY = pageConfig.height - pageConfig.footerHeight - pageConfig.margin;
+    
+    // Línea separadora superior
+    doc.moveTo(pageConfig.margin, footerY)
+       .lineTo(pageConfig.width - pageConfig.margin, footerY)
+       .strokeColor('#bdc3c7')
+       .lineWidth(1)
+       .stroke();
+    
+    // Numeración de páginas
+    const pageText = `Página ${currentPage} de ${totalPages}`;
+    doc.fontSize(9)
+       .font('Helvetica')
+       .fillColor('#7f8c8d')
+       .text(pageText, pageConfig.width - pageConfig.margin - 80, footerY + 15);
+    
+    // Marca de agua o información adicional
+    doc.fontSize(8)
+       .fillColor('#95a5a6')
+       .text('Catálogo generado automáticamente', pageConfig.margin, footerY + 15);
+    
+    // Reset color
+    doc.fillColor('black');
+  }
+
+  // Placeholder profesional para productos sin imagen
+  static renderPlaceholderProfessional(doc, imageX, imageY, imageSize) {
+    // Fondo gris claro con bordes redondeados simulados
+    doc.rect(imageX, imageY, imageSize, imageSize)
+       .fillAndStroke('#f8f9fa', '#dee2e6');
+    
+    // Ícono de imagen faltante más grande
+    const iconSize = imageSize * 0.4;
+    const iconX = imageX + (imageSize - iconSize) / 2;
+    const iconY = imageY + (imageSize - iconSize) / 2;
+    
+    doc.fontSize(iconSize / 1.5)
+       .fillColor('#6c757d')
+       .text('📷', iconX, iconY, { 
+         width: iconSize, 
+         align: 'center' 
+       });
+    
+    // Texto más visible
+    doc.fontSize(8)
+       .font('Helvetica')
+       .fillColor('#868e96')
+       .text('Sin imagen', imageX + 10, imageY + imageSize - 20, { 
+         width: imageSize - 20, 
+         align: 'center' 
+       });
+  }
 
 }
 
