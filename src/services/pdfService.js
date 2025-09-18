@@ -15,33 +15,14 @@ class PDFService {
       // Construir URL pública de Supabase Storage si es necesario
       let finalUrl = url.trim();
       
-      // Logging detallado para debugging
-      console.log(`🔍 URL original: "${finalUrl}"`);
-      
       // Si ya es una URL completa, usarla directamente
       if (!finalUrl.startsWith('http')) {
         // Es solo el nombre del archivo, construir URL completa
-        // Limpiar el nombre del archivo de caracteres problemáticos
-        const cleanFileName = finalUrl.replace(/[^a-zA-Z0-9.-]/g, '_');
-        finalUrl = `https://xdhymmzmxbaxxmregzuh.supabase.co/storage/v1/object/public/imagenes/${cleanFileName}`;
-        console.log(`🔧 URL construida desde nombre: ${finalUrl}`);
+        finalUrl = `https://xdhymmzmxbaxxmregzuh.supabase.co/storage/v1/object/public/imagenes/${finalUrl}`;
       } else if (finalUrl.includes('supabase.co') && !finalUrl.includes('/storage/v1/object/public/')) {
         // Convertir URL de Supabase a formato público
         const fileName = finalUrl.split('/').pop() || finalUrl;
-        const cleanFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
-        finalUrl = `https://xdhymmzmxbaxxmregzuh.supabase.co/storage/v1/object/public/imagenes/${cleanFileName}`;
-        console.log(`🔧 URL convertida de Supabase: ${finalUrl}`);
-      }
-
-      // Encoding especial para caracteres problemáticos
-      try {
-        const urlParts = finalUrl.split('/');
-        const fileName = urlParts.pop();
-        const encodedFileName = encodeURIComponent(fileName).replace(/%2E/g, '.');
-        finalUrl = urlParts.join('/') + '/' + encodedFileName;
-        console.log(`🔗 URL final encodificada: ${finalUrl}`);
-      } catch (encodeError) {
-        console.warn(`⚠️ Error encodificando URL: ${encodeError.message}`);
+        finalUrl = `https://xdhymmzmxbaxxmregzuh.supabase.co/storage/v1/object/public/imagenes/${fileName}`;
       }
 
       console.log(`🔍 Descargando: ${finalUrl}`);
@@ -49,7 +30,7 @@ class PDFService {
       // Descargar imagen con mejor manejo de errores y configuración optimizada
       const response = await new Promise((resolve, reject) => {
         const request = https.get(finalUrl, {
-          timeout: 20000, // Más tiempo para debugging
+          timeout: 15000, // Más tiempo para imágenes de mayor calidad
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             'Accept': 'image/jpeg,image/png,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
@@ -60,7 +41,6 @@ class PDFService {
           }
         }, (response) => {
           console.log(`📡 Status ${response.statusCode} para ${finalUrl}`);
-          console.log(`📋 Headers:`, response.headers);
           
           // Manejar redirecciones
           if (response.statusCode === 302 || response.statusCode === 301) {
@@ -71,47 +51,19 @@ class PDFService {
             return;
           }
           
-          if (response.statusCode === 404) {
-            console.error(`❌ Imagen no encontrada (404): ${finalUrl}`);
-            reject(new Error(`Imagen no encontrada: HTTP 404`));
-            return;
-          }
-          
           if (response.statusCode !== 200) {
-            console.error(`❌ Error HTTP ${response.statusCode}: ${response.statusMessage} para ${finalUrl}`);
             reject(new Error(`HTTP ${response.statusCode}: ${response.statusMessage}`));
             return;
           }
 
           const chunks = [];
-          response.on('data', (chunk) => {
-            chunks.push(chunk);
-            console.log(`📦 Chunk recibido: ${chunk.length} bytes`);
-          });
-          
+          response.on('data', (chunk) => chunks.push(chunk));
           response.on('end', () => {
             const buffer = Buffer.concat(chunks);
-            console.log(`✅ Descarga completada: ${buffer.length} bytes total`);
-            
-            // Verificar que el buffer no esté vacío
-            if (buffer.length === 0) {
-              reject(new Error('Buffer vacío recibido'));
-              return;
-            }
-            
-            // Verificar que sea una imagen válida verificando magic numbers
-            const isValidImage = PDFService.isValidImageBuffer(buffer);
-            if (!isValidImage) {
-              console.warn(`⚠️ Buffer no parece ser una imagen válida`);
-            }
-            
+            console.log(`✅ Descargado: ${buffer.length} bytes`);
             resolve(buffer);
           });
-          
-          response.on('error', (err) => {
-            console.error(`❌ Error en response: ${err.message}`);
-            reject(err);
-          });
+          response.on('error', reject);
         });
 
         request.on('error', (err) => {
@@ -132,9 +84,7 @@ class PDFService {
       }
 
       try {
-        console.log(`🖼️ Procesando imagen con Jimp...`);
         const image = await Jimp.read(response);
-        console.log(`📏 Dimensiones originales: ${image.bitmap.width}x${image.bitmap.height}`);
         
         // Mejorar la calidad significativamente para el nuevo layout 3x3
         const compressedBuffer = await image
@@ -142,25 +92,16 @@ class PDFService {
           .quality(85)         // Calidad alta para imágenes nítidas
           .getBufferAsync(Jimp.MIME_JPEG);
 
-        console.log(`🎯 Comprimido exitosamente: ${compressedBuffer.length} bytes (alta calidad)`);
+        console.log(`🎯 Comprimido: ${compressedBuffer.length} bytes (alta calidad)`);
         return compressedBuffer;
       } catch (jimpError) {
-        // Si Jimp falla (ej. con WebP), devolver la imagen original sin comprimir
-        const imageType = PDFService.getImageType(response);
-        console.warn(`⚠️ Jimp falló con ${imageType}, usando imagen original: ${jimpError.message}`);
-        
-        // Para WebP y otros formatos no soportados por Jimp, PDFKit puede manejarlos directamente
-        if (imageType === 'WebP' || imageType === 'unknown') {
-          console.log(`📋 Usando imagen ${imageType} sin compresión (${response.length} bytes)`);
-        }
-        
+        // Si Jimp falla, devolver la imagen original sin comprimir
+        console.warn(`⚠️ Jimp falló, usando imagen original: ${jimpError.message}`);
         return response;
       }
 
     } catch (error) {
-      console.error(`❌ Error completo descargando ${url}:`);
-      console.error(`   Mensaje: ${error.message}`);
-      console.error(`   Stack: ${error.stack}`);
+      console.warn(`❌ Falló descarga de ${url}: ${error.message}`);
       return null;
     }
   }
@@ -252,13 +193,13 @@ class PDFService {
 
         console.log(`📄 Generando contenido con ${imageMap.size} imágenes de alta calidad`);
 
-        // Configuración del layout optimizado para 3 columnas con mejor espaciado
+        // Configuración del layout optimizado para 3 columnas
         const pageConfig = {
           width: 595.28,      // Ancho A4 en puntos
           height: 841.89,     // Alto A4 en puntos
           margin: 40,         // Margen general
           headerHeight: 80,   // Espacio para header
-          footerHeight: 80,   // Más espacio para footer para evitar choque
+          footerHeight: 40,   // Espacio para footer
         };
 
         const gridConfig = {
@@ -266,8 +207,8 @@ class PDFService {
           rows: 3,            // 3 filas 
           productsPerPage: 9, // 3x3 = 9 productos por página
           cardWidth: 165,     // Ancho más grande para cada tarjeta
-          cardHeight: 170,    // Altura más reducida para evitar choque con footer
-          imageSize: 110,     // Imagen ligeramente más pequeña para compensar
+          cardHeight: 200,    // Alto más grande para cada tarjeta
+          imageSize: 120,     // Imagen más grande y visible
           spacing: 15,        // Más espaciado entre tarjetas
         };
 
@@ -471,7 +412,7 @@ class PDFService {
 
   // Renderizar grid de productos de forma profesional
   static renderProductsGrid(doc, products, pageConfig, gridConfig, imageMap) {
-    const startY = pageConfig.margin + pageConfig.headerHeight + 25; // Más separación del header
+    const startY = pageConfig.margin + pageConfig.headerHeight + 20;
     
     for (let i = 0; i < products.length && i < gridConfig.productsPerPage; i++) {
       const product = products[i];
@@ -524,9 +465,9 @@ class PDFService {
       // Información del producto debajo de la imagen
       const textStartY = imageY + imageSize + 10;
       
-      // Nombre del producto - más compacto
+      // Nombre del producto - más prominente y con más espacio
       const productName = (product.nombre || 'Sin nombre').substring(0, 35);
-      doc.fontSize(10)
+      doc.fontSize(11)
          .font('Helvetica-Bold')
          .fillColor('#2c3e50')
          .text(productName, x + 8, textStartY, { 
@@ -535,21 +476,21 @@ class PDFService {
            ellipsis: true
          });
 
-      // Precio - destacado pero más compacto
+      // Precio - más grande y destacado
       const price = product.precio ? `$${parseFloat(product.precio).toLocaleString('es-ES')}` : '$0';
-      doc.fontSize(12)
+      doc.fontSize(13)
          .font('Helvetica-Bold')
          .fillColor('#27ae60')
-         .text(price, x + 8, textStartY + 14, { 
+         .text(price, x + 8, textStartY + 18, { 
            width: gridConfig.cardWidth - 16, 
            align: 'center'
          });
 
-      // ID del producto - más cerca del precio
-      doc.fontSize(7)
+      // ID del producto - discreto pero legible
+      doc.fontSize(8)
          .font('Helvetica')
          .fillColor('#7f8c8d')
-         .text(`ID: ${product.id}`, x + 8, textStartY + 30, { 
+         .text(`ID: ${product.id}`, x + 8, textStartY + 38, { 
            width: gridConfig.cardWidth - 16, 
            align: 'center'
          });
@@ -562,28 +503,28 @@ class PDFService {
     }
   }
 
-  // Renderizar footer profesional con mejor espaciado
+  // Renderizar footer profesional
   static renderFooter(doc, pageConfig, currentPage, totalPages) {
-    const footerY = pageConfig.height - pageConfig.footerHeight - pageConfig.margin + 20; // Más separación del contenido
+    const footerY = pageConfig.height - pageConfig.footerHeight - pageConfig.margin;
     
-    // Línea separadora superior con más margen
+    // Línea separadora superior
     doc.moveTo(pageConfig.margin, footerY)
        .lineTo(pageConfig.width - pageConfig.margin, footerY)
        .strokeColor('#bdc3c7')
        .lineWidth(1)
        .stroke();
     
-    // Numeración de páginas con más separación de la línea
+    // Numeración de páginas
     const pageText = `Página ${currentPage} de ${totalPages}`;
     doc.fontSize(9)
        .font('Helvetica')
        .fillColor('#7f8c8d')
-       .text(pageText, pageConfig.width - pageConfig.margin - 80, footerY + 20);
+       .text(pageText, pageConfig.width - pageConfig.margin - 80, footerY + 15);
     
-    // Marca de agua o información adicional con más separación
+    // Marca de agua o información adicional
     doc.fontSize(8)
        .fillColor('#95a5a6')
-       .text('Catálogo generado automáticamente', pageConfig.margin, footerY + 20);
+       .text('Catálogo generado automáticamente', pageConfig.margin, footerY + 15);
     
     // Reset color
     doc.fillColor('black');
@@ -615,64 +556,6 @@ class PDFService {
          width: imageSize - 20, 
          align: 'center' 
        });
-  }
-
-  // Función auxiliar para verificar si un buffer es una imagen válida
-  static isValidImageBuffer(buffer) {
-    if (!buffer || buffer.length < 8) return false;
-    
-    // Verificar magic numbers comunes de imágenes
-    const header = buffer.toString('hex', 0, 8).toLowerCase();
-    
-    // JPEG: FF D8 FF
-    if (header.startsWith('ffd8ff')) return true;
-    
-    // PNG: 89 50 4E 47 0D 0A 1A 0A
-    if (header.startsWith('89504e47')) return true;
-    
-    // GIF: 47 49 46 38
-    if (header.startsWith('47494638')) return true;
-    
-    // WebP: 52 49 46 46 (RIFF)
-    if (header.startsWith('52494646')) return true;
-    
-    return false;
-  }
-
-  // Función auxiliar para detectar tipo de imagen
-  static getImageType(buffer) {
-    if (!buffer || buffer.length < 8) return 'unknown';
-    
-    const header = buffer.toString('hex', 0, 8).toLowerCase();
-    
-    if (header.startsWith('ffd8ff')) return 'JPEG';
-    if (header.startsWith('89504e47')) return 'PNG';
-    if (header.startsWith('47494638')) return 'GIF';
-    if (header.startsWith('52494646')) return 'WebP';
-    
-    return 'unknown';
-  }
-
-  // Método para testear una URL específica (útil para debugging)
-  static async testSpecificImageURL(url, productId = 'unknown') {
-    console.log(`🧪 TESTING URL para producto ${productId}:`);
-    console.log(`   URL original: "${url}"`);
-    
-    try {
-      const result = await PDFService.downloadAndCompressImage(url);
-      if (result) {
-        console.log(`✅ SUCCESS: Imagen descargada correctamente para ${productId}`);
-        console.log(`   Tamaño: ${result.length} bytes`);
-        console.log(`   Tipo: ${PDFService.getImageType(result)}`);
-        return true;
-      } else {
-        console.log(`❌ FAILED: No se pudo descargar imagen para ${productId}`);
-        return false;
-      }
-    } catch (error) {
-      console.log(`❌ ERROR: ${error.message} para ${productId}`);
-      return false;
-    }
   }
 
 }
