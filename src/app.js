@@ -35,7 +35,9 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       'GET /api/products': 'Obtener todos los productos disponibles',
+      'POST /api/products': 'Crear nuevo producto',
       'GET /api/products/:id': 'Obtener producto por ID',
+      'DELETE /api/products/:id': 'Eliminar producto por ID',
       'GET /api/products/stats': 'Obtener estadísticas de productos',
       'GET /api/products/pdf': 'Generar PDF con catálogo de productos',
       'GET /api/products/pdf/detailed': 'Generar PDF detallado de productos'

@@ -175,6 +175,87 @@ class ProductController {
     }
   }
 
+  // Crear nuevo producto
+  static async createProduct(req, res) {
+    try {
+      const { nombre, descripcion, precio, imagen_url } = req.body;
+
+      // Validaciones
+      if (!nombre || !descripcion || precio === undefined) {
+        return res.status(400).json({
+          success: false,
+          message: 'Nombre, descripción y precio son campos obligatorios'
+        });
+      }
+
+      if (precio < 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'El precio debe ser mayor o igual a 0'
+        });
+      }
+
+      const query = `
+        INSERT INTO productos (nombre, descripcion, precio, imagen_url, creado_en) 
+        VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) 
+        RETURNING id, nombre, descripcion, precio, imagen_url, creado_en
+      `;
+      
+      const result = await pool.query(query, [nombre, descripcion, precio, imagen_url]);
+      
+      res.status(201).json({
+        success: true,
+        message: 'Producto creado exitosamente',
+        data: result.rows[0]
+      });
+    } catch (error) {
+      console.error('Error al crear producto:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
+        error: error.message
+      });
+    }
+  }
+
+  // Eliminar producto
+  static async deleteProduct(req, res) {
+    try {
+      const { id } = req.params;
+      
+      // Primero verificar si el producto existe
+      const checkQuery = 'SELECT id, nombre FROM productos WHERE id = $1';
+      const checkResult = await pool.query(checkQuery, [id]);
+      
+      if (checkResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Producto no encontrado'
+        });
+      }
+
+      // Eliminar el producto
+      const deleteQuery = 'DELETE FROM productos WHERE id = $1 RETURNING id, nombre';
+      const deleteResult = await pool.query(deleteQuery, [id]);
+      
+      res.status(200).json({
+        success: true,
+        message: 'Producto eliminado exitosamente',
+        data: {
+          id: deleteResult.rows[0].id,
+          nombre: deleteResult.rows[0].nombre
+        }
+      });
+    } catch (error) {
+      console.error('Error al eliminar producto:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error interno del servidor',
+        error: error.message
+      });
+    }
+  }
+
   // Obtener estadísticas de productos
   static async getProductStats(req, res) {
     try {
