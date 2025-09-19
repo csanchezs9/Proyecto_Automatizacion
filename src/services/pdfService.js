@@ -369,23 +369,11 @@ class PDFService {
   static renderHeader(doc, pageConfig, currentPage, totalPages) {
     const headerY = pageConfig.margin;
     
-    // Fondo del header con gradiente simulado
-    doc.rect(pageConfig.margin, headerY, pageConfig.width - (pageConfig.margin * 2), pageConfig.headerHeight)
-       .fillAndStroke('#2c3e50', '#34495e');
-    
-    // Logo simulado (cuadrado azul como en la imagen)
-    const logoSize = 30;
-    const logoX = pageConfig.margin + 15;
-    const logoY = headerY + 15;
-    
-    doc.rect(logoX, logoY, logoSize, logoSize)
-       .fillAndStroke('#3498db', '#2980b9');
-    
-    // Título principal
-    doc.fontSize(18)
+    // Título principal elegante y profesional (sin logo)
+    doc.fontSize(20)
        .font('Helvetica-Bold')
-       .fillColor('white')
-       .text('CATÁLOGO DE PRODUCTOS', logoX + logoSize + 20, logoY + 5);
+       .fillColor('#333333')
+       .text('CATÁLOGO DE PRODUCTOS', pageConfig.margin + 10, headerY + 20);
     
     // Fecha en la esquina superior derecha
     const dateText = new Date().toLocaleDateString('es-ES', {
@@ -394,15 +382,15 @@ class PDFService {
       year: 'numeric'
     });
     
-    doc.fontSize(12)
+    doc.fontSize(11)
        .font('Helvetica')
-       .fillColor('white')
-       .text(dateText, pageConfig.width - pageConfig.margin - 80, logoY + 8);
+       .fillColor('#666666')
+       .text(dateText, pageConfig.width - pageConfig.margin - 80, headerY + 26);
     
-    // Línea separadora
-    doc.moveTo(pageConfig.margin, headerY + pageConfig.headerHeight)
-       .lineTo(pageConfig.width - pageConfig.margin, headerY + pageConfig.headerHeight)
-       .strokeColor('#bdc3c7')
+    // Línea separadora elegante
+    doc.moveTo(pageConfig.margin, headerY + pageConfig.headerHeight - 5)
+       .lineTo(pageConfig.width - pageConfig.margin, headerY + pageConfig.headerHeight - 5)
+       .strokeColor('#e0e0e0')
        .lineWidth(1)
        .stroke();
     
@@ -429,19 +417,26 @@ class PDFService {
   // Renderizar tarjeta de producto profesional
   static renderProductCardProfessional(doc, product, x, y, gridConfig, preloadedImage = null) {
     try {
-      // Marco con bordes redondeados simulados y sombra sutil
+      // Marco elegante con borde sutil
       doc.rect(x, y, gridConfig.cardWidth, gridConfig.cardHeight)
-         .fillOpacity(0.05)
-         .fill('#ecf0f1')
-         .fillOpacity(1)
-         .strokeColor('#3498db')
-         .lineWidth(2)
+         .strokeColor('#d0d0d0')
+         .lineWidth(1)
          .stroke();
+      
+      // Sombra sutil simulada
+      doc.rect(x + 2, y + 2, gridConfig.cardWidth, gridConfig.cardHeight)
+         .fillOpacity(0.05)
+         .fill('#000000')
+         .fillOpacity(1);
+      
+      // Contenedor principal
+      doc.rect(x, y, gridConfig.cardWidth, gridConfig.cardHeight)
+         .fillAndStroke('#ffffff', '#d0d0d0');
 
       // Área de imagen centrada
       const imageSize = gridConfig.imageSize;
       const imageX = x + (gridConfig.cardWidth - imageSize) / 2;
-      const imageY = y + 15;
+      const imageY = y + 10;
 
       // Renderizar imagen o placeholder con mejor calidad
       if (preloadedImage) {
@@ -463,35 +458,35 @@ class PDFService {
       }
 
       // Información del producto debajo de la imagen
-      const textStartY = imageY + imageSize + 10;
+      const textStartY = imageY + imageSize + 8;
       
-      // Nombre del producto - más prominente y con más espacio
-      const productName = (product.nombre || 'Sin nombre').substring(0, 35);
-      doc.fontSize(11)
+      // Nombre del producto - texto pequeño y profesional
+      const productName = (product.nombre || 'Sin nombre').substring(0, 40);
+      doc.fontSize(9)
          .font('Helvetica-Bold')
-         .fillColor('#2c3e50')
-         .text(productName, x + 8, textStartY, { 
-           width: gridConfig.cardWidth - 16, 
+         .fillColor('#333333')
+         .text(productName, x + 6, textStartY, { 
+           width: gridConfig.cardWidth - 12, 
            align: 'center',
            ellipsis: true
          });
 
-      // Precio - más grande y destacado
+      // Precio - texto negro profesional
       const price = product.precio ? `$${parseFloat(product.precio).toLocaleString('es-ES')}` : '$0';
-      doc.fontSize(13)
+      doc.fontSize(10)
          .font('Helvetica-Bold')
-         .fillColor('#27ae60')
-         .text(price, x + 8, textStartY + 18, { 
-           width: gridConfig.cardWidth - 16, 
+         .fillColor('#000000')
+         .text(price, x + 6, textStartY + 14, { 
+           width: gridConfig.cardWidth - 12, 
            align: 'center'
          });
 
       // ID del producto - discreto pero legible
-      doc.fontSize(8)
+      doc.fontSize(7)
          .font('Helvetica')
-         .fillColor('#7f8c8d')
-         .text(`ID: ${product.id}`, x + 8, textStartY + 38, { 
-           width: gridConfig.cardWidth - 16, 
+         .fillColor('#888888')
+         .text(`ID: ${product.id}`, x + 6, textStartY + 28, { 
+           width: gridConfig.cardWidth - 12, 
            align: 'center'
          });
 
@@ -507,24 +502,24 @@ class PDFService {
   static renderFooter(doc, pageConfig, currentPage, totalPages) {
     const footerY = pageConfig.height - pageConfig.footerHeight - pageConfig.margin;
     
-    // Línea separadora superior
+    // Línea separadora superior muy sutil
     doc.moveTo(pageConfig.margin, footerY)
        .lineTo(pageConfig.width - pageConfig.margin, footerY)
-       .strokeColor('#bdc3c7')
-       .lineWidth(1)
+       .strokeColor('#e8e8e8')
+       .lineWidth(0.5)
        .stroke();
     
-    // Numeración de páginas
+    // Numeración de páginas - más discreto
     const pageText = `Página ${currentPage} de ${totalPages}`;
-    doc.fontSize(9)
-       .font('Helvetica')
-       .fillColor('#7f8c8d')
-       .text(pageText, pageConfig.width - pageConfig.margin - 80, footerY + 15);
-    
-    // Marca de agua o información adicional
     doc.fontSize(8)
-       .fillColor('#95a5a6')
-       .text('Catálogo generado automáticamente', pageConfig.margin, footerY + 15);
+       .font('Helvetica')
+       .fillColor('#999999')
+       .text(pageText, pageConfig.width - pageConfig.margin - 70, footerY + 12);
+    
+    // Marca de agua discreta
+    doc.fontSize(7)
+       .fillColor('#cccccc')
+       .text('Catálogo generado automáticamente', pageConfig.margin, footerY + 12);
     
     // Reset color
     doc.fillColor('black');
@@ -532,27 +527,27 @@ class PDFService {
 
   // Placeholder profesional para productos sin imagen
   static renderPlaceholderProfessional(doc, imageX, imageY, imageSize) {
-    // Fondo gris claro con bordes redondeados simulados
+    // Fondo gris claro muy sutil
     doc.rect(imageX, imageY, imageSize, imageSize)
-       .fillAndStroke('#f8f9fa', '#dee2e6');
+       .fillAndStroke('#f9f9f9', '#e0e0e0');
     
-    // Ícono de imagen faltante más grande
-    const iconSize = imageSize * 0.4;
+    // Ícono de imagen faltante más elegante
+    const iconSize = imageSize * 0.3;
     const iconX = imageX + (imageSize - iconSize) / 2;
     const iconY = imageY + (imageSize - iconSize) / 2;
     
-    doc.fontSize(iconSize / 1.5)
-       .fillColor('#6c757d')
+    doc.fontSize(iconSize / 2)
+       .fillColor('#999999')
        .text('📷', iconX, iconY, { 
          width: iconSize, 
          align: 'center' 
        });
     
-    // Texto más visible
-    doc.fontSize(8)
+    // Texto más discreto
+    doc.fontSize(7)
        .font('Helvetica')
-       .fillColor('#868e96')
-       .text('Sin imagen', imageX + 10, imageY + imageSize - 20, { 
+       .fillColor('#cccccc')
+       .text('Sin imagen', imageX + 10, imageY + imageSize - 18, { 
          width: imageSize - 20, 
          align: 'center' 
        });
