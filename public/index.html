@@ -888,7 +888,7 @@
     </div>
 
     <script>
-        const API_BASE_URL = 'http://localhost:3000';
+        const API_BASE_URL = 'http://localhost:3001';
         
         // Configuración de Supabase
         const SUPABASE_URL = 'https://xdhymmzmxbaxxmregzuh.supabase.co';
@@ -1213,38 +1213,7 @@
             }
         }
 
-        // Función para subir imagen a Supabase Storage
-        async function uploadImageToSupabase(file) {
-            try {
-                // Generar nombre único para el archivo
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-                
-                // Crear FormData para la subida
-                const formData = new FormData();
-                formData.append('file', file);
 
-                // Subir a Supabase Storage
-                const response = await fetch(`${SUPABASE_URL}/storage/v1/object/imagenes/${fileName}`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    },
-                    body: formData
-                });
-
-                if (response.ok) {
-                    return fileName; // Retornar solo el nombre del archivo
-                } else {
-                    const error = await response.text();
-                    console.error('Error al subir imagen:', error);
-                    throw new Error('Error al subir la imagen a Supabase');
-                }
-            } catch (error) {
-                console.error('Error en uploadImageToSupabase:', error);
-                throw error;
-            }
-        }
 
         function cancelAddProduct() {
             document.getElementById('addProductForm').style.display = 'none';
@@ -1276,35 +1245,30 @@
             showLoading('products');
 
             try {
-                let imageUrl = null;
-
-                // Subir imagen si se seleccionó una
+                // Crear FormData para enviar archivo e información del producto
+                const formData = new FormData();
+                formData.append('nombre', name);
+                formData.append('descripcion', description);
+                formData.append('precio', parseFloat(price));
+                
+                // Agregar imagen si se seleccionó una
                 if (imageFile) {
-                    showResult('products', 'Subiendo imagen...', false);
-                    imageUrl = await uploadImageToSupabase(imageFile);
+                    showResult('products', 'Subiendo producto con imagen...', false);
+                    formData.append('imagen', imageFile);
+                } else {
+                    showResult('products', 'Guardando producto...', false);
                 }
-
-                const productData = {
-                    nombre: name,
-                    descripcion: description,
-                    precio: parseFloat(price),
-                    imagen_url: imageUrl
-                };
-
-                showResult('products', 'Guardando producto...', false);
 
                 const response = await fetch(`${API_BASE_URL}/api/products`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(productData)
+                    body: formData  // No establecer Content-Type, fetch lo hará automáticamente para FormData
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    showResult('products', `✅ Producto creado exitosamente!\n\nID: ${data.data.id}\nNombre: ${data.data.nombre}\nPrecio: $${data.data.precio}${imageUrl ? '\nImagen: Subida correctamente' : ''}`, false);
+                    const imageStatus = data.imageUploaded ? '\n✅ Imagen subida correctamente' : '';
+                    showResult('products', `✅ Producto creado exitosamente!\n\nID: ${data.data.id}\nNombre: ${data.data.nombre}\nPrecio: $${data.data.precio}${imageStatus}`, false);
                     cancelAddProduct();
                     // Actualizar la lista de productos automáticamente
                     setTimeout(() => {

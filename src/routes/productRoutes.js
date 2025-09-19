@@ -10,6 +10,7 @@ router.get('/stats', ProductController.getProductStats);
 router.get('/pdf', ProductController.generateProductsPDF);
 router.get('/pdf/detailed', ProductController.generateDetailedPDF);
 router.get('/download/:filename', ProductController.downloadPDF);
+router.get('/test-storage', ProductController.testStorageConnection);
 router.get('/:id', ProductController.getProductById);
 router.delete('/:id', ProductController.deleteProduct);
 

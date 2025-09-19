@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const fileUpload = require('express-fileupload');
 const path = require('path');
 require('dotenv').config();
 
@@ -21,6 +22,21 @@ app.use(morgan('combined'));
 // Middlewares para parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Middleware para manejo de archivos
+app.use(fileUpload({
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  useTempFiles: false,
+  tempFileDir: '/tmp/',
+  abortOnLimit: true,
+  responseOnLimit: 'El archivo es demasiado grande. Tamaño máximo permitido: 5MB',
+  limitHandler: (req, res, next) => {
+    res.status(413).json({
+      success: false,
+      message: 'El archivo es demasiado grande. Tamaño máximo permitido: 5MB'
+    });
+  }
+}));
 
 // Servir archivos estáticos
 app.use(express.static(path.join(__dirname, '../public')));

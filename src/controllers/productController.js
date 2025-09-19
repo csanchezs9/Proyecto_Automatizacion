@@ -1,5 +1,6 @@
 const { pool } = require('../config/database');
 const PDFService = require('../services/pdfService');
+const ImageUploadService = require('../services/imageUploadService');
 const path = require('path');
 const fs = require('fs');
 
@@ -179,9 +180,11 @@ class ProductController {
   static async createProduct(req, res) {
     try {
       const { nombre, descripcion, precio, imagen_url } = req.body;
+      let finalImageUrl = imagen_url || null;
 
-      // Validaciones
+      // Validaciones básicas
       if (!nombre || !descripcion || precio === undefined) {
+        console.log('❌ Validación fallida: campos obligatorios');
         return res.status(400).json({
           success: false,
           message: 'Nombre, descripción y precio son campos obligatorios'
@@ -189,25 +192,55 @@ class ProductController {
       }
 
       if (precio < 0) {
+        console.log('❌ Validación fallida: precio negativo');
         return res.status(400).json({
           success: false,
           message: 'El precio debe ser mayor o igual a 0'
         });
       }
 
+      // Manejar subida de imagen si se proporciona un archivo
+      if (req.files && req.files.imagen) {
+        try {
+          const imageUploadService = new ImageUploadService();
+          const uploadResult = await imageUploadService.processUploadedFile(req.files.imagen);
+          
+          if (!uploadResult.success) {
+            return res.status(400).json({
+              success: false,
+              message: 'Error al subir imagen',
+              error: uploadResult.error
+            });
+          }
+          
+          finalImageUrl = uploadResult.url;
+          
+        } catch (imageError) {
+          console.error('Error al procesar imagen:', imageError);
+          return res.status(500).json({
+            success: false,
+            message: 'Error al procesar la imagen',
+            error: imageError.message
+          });
+        }
+      }
+
+      // Insertar producto en la base de datos con la URL de imagen final
       const query = `
         INSERT INTO productos (nombre, descripcion, precio, imagen_url, creado_en) 
         VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) 
         RETURNING id, nombre, descripcion, precio, imagen_url, creado_en
       `;
       
-      const result = await pool.query(query, [nombre, descripcion, precio, imagen_url]);
+      const result = await pool.query(query, [nombre, descripcion, precio, finalImageUrl]);
       
       res.status(201).json({
         success: true,
         message: 'Producto creado exitosamente',
-        data: result.rows[0]
+        data: result.rows[0],
+        imageUploaded: finalImageUrl !== imagen_url
       });
+      
     } catch (error) {
       console.error('Error al crear producto:', error);
       res.status(500).json({
@@ -223,8 +256,8 @@ class ProductController {
     try {
       const { id } = req.params;
       
-      // Primero verificar si el producto existe
-      const checkQuery = 'SELECT id, nombre FROM productos WHERE id = $1';
+      // Primero verificar si el producto existe y obtener la URL de imagen
+      const checkQuery = 'SELECT id, nombre, imagen_url FROM productos WHERE id = $1';
       const checkResult = await pool.query(checkQuery, [id]);
       
       if (checkResult.rows.length === 0) {
@@ -234,8 +267,30 @@ class ProductController {
         });
       }
 
-      // Eliminar el producto
-      const deleteQuery = 'DELETE FROM productos WHERE id = $1 RETURNING id, nombre';
+      const producto = checkResult.rows[0];
+      let imageDeleted = false;
+
+      // Intentar eliminar imagen de Supabase Storage si existe
+      if (producto.imagen_url) {
+        try {
+          const imageUploadService = new ImageUploadService();
+          const filePath = imageUploadService.extractFilePathFromUrl(producto.imagen_url);
+          
+          if (filePath) {
+            const deleteImageResult = await imageUploadService.deleteImage(filePath);
+            imageDeleted = deleteImageResult.success;
+            
+            if (!deleteImageResult.success) {
+              console.warn('No se pudo eliminar la imagen:', deleteImageResult.error);
+            }
+          }
+        } catch (imageError) {
+          console.warn('Error al eliminar imagen (continuando con eliminación del producto):', imageError.message);
+        }
+      }
+
+      // Eliminar el producto de la base de datos
+      const deleteQuery = 'DELETE FROM productos WHERE id = $1 RETURNING id, nombre, imagen_url';
       const deleteResult = await pool.query(deleteQuery, [id]);
       
       res.status(200).json({
@@ -243,7 +298,8 @@ class ProductController {
         message: 'Producto eliminado exitosamente',
         data: {
           id: deleteResult.rows[0].id,
-          nombre: deleteResult.rows[0].nombre
+          nombre: deleteResult.rows[0].nombre,
+          imageDeleted: imageDeleted
         }
       });
     } catch (error) {
@@ -330,6 +386,37 @@ class ProductController {
       res.status(500).json({
         success: false,
         message: 'Error interno del servidor',
+        error: error.message
+      });
+    }
+  }
+
+  // Probar conexión con Supabase Storage
+  static async testStorageConnection(req, res) {
+    try {
+      console.log('🧪 Probando conexión con Supabase Storage...');
+      
+      const ImageUploadService = require('../services/imageUploadService');
+      const imageService = new ImageUploadService();
+      
+      // Probar listando archivos del bucket
+      const listResult = await imageService.listImages();
+      
+      res.status(200).json({
+        success: true,
+        message: 'Conexión con Supabase Storage exitosa',
+        data: {
+          bucketName: imageService.bucketName,
+          filesCount: listResult.success ? listResult.files.length : 0,
+          listResult: listResult
+        }
+      });
+      
+    } catch (error) {
+      console.error('❌ Error al probar Storage:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error al conectar con Supabase Storage',
         error: error.message
       });
     }
