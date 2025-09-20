@@ -5,6 +5,36 @@ const path = require('path');
 const fs = require('fs');
 
 class ProductController {
+  // Función auxiliar para generar el siguiente ID personalizado
+  static async generateCustomId() {
+    try {
+      // Obtener el último ID personalizado de la base de datos
+      const query = `
+        SELECT id FROM productos 
+        WHERE id LIKE 'c-%' 
+        ORDER BY CAST(SUBSTRING(id FROM 3) AS INTEGER) DESC 
+        LIMIT 1
+      `;
+      
+      const result = await pool.query(query);
+      
+      if (result.rows.length === 0) {
+        // Si no hay productos con formato c-X, empezar con c-1
+        return 'c-1';
+      }
+      
+      // Extraer el número del último ID y incrementar
+      const lastId = result.rows[0].id;
+      const lastNumber = parseInt(lastId.substring(2)); // Quitar 'c-' y convertir a número
+      const nextNumber = lastNumber + 1;
+      
+      return `c-${nextNumber}`;
+    } catch (error) {
+      console.error('Error generando ID personalizado:', error);
+      throw error;
+    }
+  }
+
   // Obtener todos los productos disponibles
   static async getAllProducts(req, res) {
     try {
@@ -225,14 +255,17 @@ class ProductController {
         }
       }
 
-      // Insertar producto en la base de datos con la URL de imagen final
+      // Generar ID personalizado
+      const customId = await ProductController.generateCustomId();
+      
+      // Insertar producto en la base de datos con ID personalizado
       const query = `
-        INSERT INTO productos (nombre, descripcion, precio, imagen_url, creado_en) 
-        VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) 
+        INSERT INTO productos (id, nombre, descripcion, precio, imagen_url, creado_en) 
+        VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP) 
         RETURNING id, nombre, descripcion, precio, imagen_url, creado_en
       `;
       
-      const result = await pool.query(query, [nombre, descripcion, precio, finalImageUrl]);
+      const result = await pool.query(query, [customId, nombre, descripcion, precio, finalImageUrl]);
       
       res.status(201).json({
         success: true,

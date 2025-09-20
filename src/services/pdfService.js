@@ -164,17 +164,17 @@ class PDFService {
         console.log('🚀 Generando catálogo PDF profesional...');
         const startTime = Date.now();
 
-        // Configuración profesional del documento
+        // Configuración profesional del documento con márgenes amplios
         const doc = new PDFDocument({ 
-          margin: 40,
+          margin: 60,  // Márgenes amplios y simétricos
           compress: true,
           size: 'A4',
           bufferPages: true,
           info: {
             Title: 'Catálogo de Productos',
             Author: 'Sistema de Automatización',
-            Subject: 'Catálogo de Productos',
-            Keywords: 'catálogo, productos, PDF'
+            Subject: 'Catálogo de Productos Profesional',
+            Keywords: 'catálogo, productos, PDF, minimalista'
           }
         });
         
@@ -193,23 +193,23 @@ class PDFService {
 
         console.log(`📄 Generando contenido con ${imageMap.size} imágenes de alta calidad`);
 
-        // Configuración del layout optimizado para 3 columnas
+        // Configuración del layout minimalista optimizado para 3 columnas
         const pageConfig = {
           width: 595.28,      // Ancho A4 en puntos
           height: 841.89,     // Alto A4 en puntos
-          margin: 40,         // Margen general
-          headerHeight: 80,   // Espacio para header
-          footerHeight: 40,   // Espacio para footer
+          margin: 60,         // Márgenes amplios y simétricos
+          headerHeight: 90,   // Espacio generoso para header moderno
+          footerHeight: 50,   // Espacio para footer elegante
         };
 
         const gridConfig = {
-          cols: 3,            // 3 columnas para tarjetas más grandes
-          rows: 3,            // 3 filas 
+          cols: 3,            // 3 columnas perfectamente alineadas
+          rows: 3,            // 3 filas por página 
           productsPerPage: 9, // 3x3 = 9 productos por página
-          cardWidth: 165,     // Ancho más grande para cada tarjeta
-          cardHeight: 200,    // Alto más grande para cada tarjeta
-          imageSize: 120,     // Imagen más grande y visible
-          spacing: 15,        // Más espaciado entre tarjetas
+          cardWidth: 150,     // Ancho optimizado para mejor proporción
+          cardHeight: 180,    // Alto optimizado para contenido
+          imageSize: 110,     // Imagen bien proporcionada
+          spacing: 20,        // Espaciado generoso y consistente
         };
 
         // Calcular posiciones del grid
@@ -365,83 +365,100 @@ class PDFService {
        });
   }
 
-  // Renderizar header profesional del catálogo
+  // Renderizar header minimalista y moderno
   static renderHeader(doc, pageConfig, currentPage, totalPages) {
     const headerY = pageConfig.margin;
     
-    // Título principal elegante y profesional (sin logo)
-    doc.fontSize(20)
+    // Título principal centrado, moderno y elegante
+    doc.fontSize(24)
        .font('Helvetica-Bold')
-       .fillColor('#333333')
-       .text('CATÁLOGO DE PRODUCTOS', pageConfig.margin + 10, headerY + 20);
+       .fillColor('#000000')
+       .text('CATÁLOGO DE PRODUCTOS', 
+             pageConfig.margin, 
+             headerY + 25, 
+             { 
+               width: pageConfig.width - (pageConfig.margin * 2), 
+               align: 'center' 
+             });
     
-    // Fecha en la esquina superior derecha
+    // Fecha alineada a la derecha en gris claro
     const dateText = new Date().toLocaleDateString('es-ES', {
       day: '2-digit',
-      month: '2-digit', 
+      month: 'long', 
       year: 'numeric'
     });
     
-    doc.fontSize(11)
+    doc.fontSize(10)
        .font('Helvetica')
-       .fillColor('#666666')
-       .text(dateText, pageConfig.width - pageConfig.margin - 80, headerY + 26);
+       .fillColor('#757575')
+       .text(dateText, 
+             pageConfig.width - pageConfig.margin - 120, 
+             headerY + 58, 
+             { 
+               width: 120, 
+               align: 'right' 
+             });
     
-    // Línea separadora elegante
-    doc.moveTo(pageConfig.margin, headerY + pageConfig.headerHeight - 5)
-       .lineTo(pageConfig.width - pageConfig.margin, headerY + pageConfig.headerHeight - 5)
-       .strokeColor('#e0e0e0')
-       .lineWidth(1)
+    // Línea divisoria sutil y elegante
+    doc.moveTo(pageConfig.margin + 60, headerY + pageConfig.headerHeight - 10)
+       .lineTo(pageConfig.width - pageConfig.margin - 60, headerY + pageConfig.headerHeight - 10)
+       .strokeColor('#e5e5e5')
+       .lineWidth(0.5)
        .stroke();
     
     // Reset color para contenido siguiente
-    doc.fillColor('black');
+    doc.fillColor('#000000');
   }
 
-  // Renderizar grid de productos de forma profesional
+  // Renderizar grid de productos perfectamente alineado
   static renderProductsGrid(doc, products, pageConfig, gridConfig, imageMap) {
-    const startY = pageConfig.margin + pageConfig.headerHeight + 20;
+    const startY = pageConfig.margin + pageConfig.headerHeight + 15;
+    
+    // Calcular espacio disponible y centrar el grid
+    const availableWidth = pageConfig.width - (pageConfig.margin * 2);
+    const totalGridWidth = (gridConfig.cardWidth * gridConfig.cols) + (gridConfig.spacing * (gridConfig.cols - 1));
+    const offsetX = (availableWidth - totalGridWidth) / 2;
     
     for (let i = 0; i < products.length && i < gridConfig.productsPerPage; i++) {
       const product = products[i];
       const row = Math.floor(i / gridConfig.cols);
       const col = i % gridConfig.cols;
       
-      const x = pageConfig.margin + (col * (gridConfig.cardWidth + gridConfig.spacing));
+      // Posición X perfectamente centrada y alineada
+      const x = pageConfig.margin + offsetX + (col * (gridConfig.cardWidth + gridConfig.spacing));
       const y = startY + (row * (gridConfig.cardHeight + gridConfig.spacing));
       
       PDFService.renderProductCardProfessional(doc, product, x, y, gridConfig, imageMap.get(product.id));
     }
   }
 
-  // Renderizar tarjeta de producto profesional
+  // Renderizar tarjeta de producto minimalista y moderna
   static renderProductCardProfessional(doc, product, x, y, gridConfig, preloadedImage = null) {
     try {
-      // Marco elegante con borde sutil
-      doc.rect(x, y, gridConfig.cardWidth, gridConfig.cardHeight)
-         .strokeColor('#d0d0d0')
-         .lineWidth(1)
-         .stroke();
-      
-      // Sombra sutil simulada
-      doc.rect(x + 2, y + 2, gridConfig.cardWidth, gridConfig.cardHeight)
-         .fillOpacity(0.05)
+      // Sombra suave simulada (shadow effect)
+      doc.rect(x + 3, y + 3, gridConfig.cardWidth, gridConfig.cardHeight)
+         .fillOpacity(0.08)
          .fill('#000000')
          .fillOpacity(1);
       
-      // Contenedor principal
-      doc.rect(x, y, gridConfig.cardWidth, gridConfig.cardHeight)
-         .fillAndStroke('#ffffff', '#d0d0d0');
+      // Card principal con fondo blanco limpio
+      doc.roundedRect(x, y, gridConfig.cardWidth, gridConfig.cardHeight, 8)  // Esquinas redondeadas
+         .fillAndStroke('#ffffff', '#f0f0f0')
+         .lineWidth(0.5);
 
-      // Área de imagen centrada
+      // Área de imagen con fondo blanco y padding
       const imageSize = gridConfig.imageSize;
+      const imagePadding = 15;
       const imageX = x + (gridConfig.cardWidth - imageSize) / 2;
-      const imageY = y + 10;
+      const imageY = y + imagePadding;
 
-      // Renderizar imagen o placeholder con mejor calidad
+      // Fondo blanco detrás de la imagen para transparencias
+      doc.rect(imageX - 2, imageY - 2, imageSize + 4, imageSize + 4)
+         .fill('#ffffff');
+
+      // Renderizar imagen o placeholder
       if (preloadedImage) {
         try {
-          // Usar la imagen de alta calidad con opciones optimizadas
           doc.image(preloadedImage, imageX, imageY, { 
             width: imageSize, 
             height: imageSize,
@@ -457,98 +474,131 @@ class PDFService {
         PDFService.renderPlaceholderProfessional(doc, imageX, imageY, imageSize);
       }
 
-      // Información del producto debajo de la imagen
-      const textStartY = imageY + imageSize + 8;
+      // Información del producto con jerarquía clara
+      const textStartY = imageY + imageSize + 12;
       
-      // Nombre del producto - texto pequeño y profesional
-      const productName = (product.nombre || 'Sin nombre').substring(0, 40);
-      doc.fontSize(9)
+      // Nombre del producto - tipografía sans-serif moderna
+      const productName = (product.nombre || 'Sin nombre').substring(0, 45);
+      doc.fontSize(11)
          .font('Helvetica-Bold')
-         .fillColor('#333333')
-         .text(productName, x + 6, textStartY, { 
-           width: gridConfig.cardWidth - 12, 
+         .fillColor('#000000')
+         .text(productName, x + 8, textStartY, { 
+           width: gridConfig.cardWidth - 16, 
            align: 'center',
            ellipsis: true
          });
 
-      // Precio - texto negro profesional
+      // Precio - color verde elegante según especificación
       const price = product.precio ? `$${parseFloat(product.precio).toLocaleString('es-ES')}` : '$0';
-      doc.fontSize(10)
+      doc.fontSize(13)
          .font('Helvetica-Bold')
-         .fillColor('#000000')
-         .text(price, x + 6, textStartY + 14, { 
-           width: gridConfig.cardWidth - 12, 
+         .fillColor('#2E7D32')  // Verde elegante como especificado
+         .text(price, x + 8, textStartY + 18, { 
+           width: gridConfig.cardWidth - 16, 
            align: 'center'
          });
 
-      // ID del producto - discreto pero legible
-      doc.fontSize(7)
+      // ID y fecha en gris suave
+      doc.fontSize(8)
          .font('Helvetica')
-         .fillColor('#888888')
-         .text(`ID: ${product.id}`, x + 6, textStartY + 28, { 
-           width: gridConfig.cardWidth - 12, 
-           align: 'center'
+         .fillColor('#757575')  // Gris suave como especificado
+         .text(`ID: ${product.id}`, x + 8, textStartY + 38, { 
+           width: (gridConfig.cardWidth - 16) / 2, 
+           align: 'left'
          });
+
+      // Fecha de creación alineada a la derecha
+      if (product.creado_en) {
+        const fecha = new Date(product.creado_en).toLocaleDateString('es-ES', { 
+          day: '2-digit', 
+          month: '2-digit' 
+        });
+        doc.text(fecha, x + (gridConfig.cardWidth / 2) + 4, textStartY + 38, { 
+          width: (gridConfig.cardWidth - 16) / 2, 
+          align: 'right'
+        });
+      }
 
       // Reset color
-      doc.fillColor('black');
+      doc.fillColor('#000000');
 
     } catch (error) {
       console.error(`❌ Error renderizando producto ${product.id}:`, error);
     }
   }
 
-  // Renderizar footer profesional
+  // Renderizar footer minimalista y elegante
   static renderFooter(doc, pageConfig, currentPage, totalPages) {
-    const footerY = pageConfig.height - pageConfig.footerHeight - pageConfig.margin;
+    const footerY = pageConfig.height - pageConfig.footerHeight - pageConfig.margin + 10;
     
-    // Línea separadora superior muy sutil
-    doc.moveTo(pageConfig.margin, footerY)
-       .lineTo(pageConfig.width - pageConfig.margin, footerY)
-       .strokeColor('#e8e8e8')
+    // Línea separadora superior muy sutil y centrada
+    const lineWidth = 200;
+    const lineX = (pageConfig.width - lineWidth) / 2;
+    doc.moveTo(lineX, footerY)
+       .lineTo(lineX + lineWidth, footerY)
+       .strokeColor('#f0f0f0')
        .lineWidth(0.5)
        .stroke();
     
-    // Numeración de páginas - más discreto
-    const pageText = `Página ${currentPage} de ${totalPages}`;
+    // Texto "Catálogo generado automáticamente" centrado y elegante
     doc.fontSize(8)
        .font('Helvetica')
-       .fillColor('#999999')
-       .text(pageText, pageConfig.width - pageConfig.margin - 70, footerY + 12);
+       .fillColor('#757575')
+       .text('Catálogo generado automáticamente', 
+             pageConfig.margin, 
+             footerY + 15, 
+             { 
+               width: pageConfig.width - (pageConfig.margin * 2), 
+               align: 'center' 
+             });
     
-    // Marca de agua discreta
-    doc.fontSize(7)
-       .fillColor('#cccccc')
-       .text('Catálogo generado automáticamente', pageConfig.margin, footerY + 12);
+    // Numeración de páginas alineada a la derecha
+    const pageText = `Página ${currentPage} de ${totalPages}`;
+    doc.fontSize(9)
+       .font('Helvetica')
+       .fillColor('#757575')
+       .text(pageText, 
+             pageConfig.width - pageConfig.margin - 80, 
+             footerY + 15, 
+             { 
+               width: 80, 
+               align: 'right' 
+             });
     
     // Reset color
-    doc.fillColor('black');
+    doc.fillColor('#000000');
   }
 
-  // Placeholder profesional para productos sin imagen
+  // Placeholder minimalista y elegante para productos sin imagen
   static renderPlaceholderProfessional(doc, imageX, imageY, imageSize) {
-    // Fondo gris claro muy sutil
-    doc.rect(imageX, imageY, imageSize, imageSize)
-       .fillAndStroke('#f9f9f9', '#e0e0e0');
+    // Fondo blanco con borde muy sutil
+    doc.roundedRect(imageX, imageY, imageSize, imageSize, 4)
+       .fillAndStroke('#ffffff', '#f5f5f5')
+       .lineWidth(0.5);
     
-    // Ícono de imagen faltante más elegante
-    const iconSize = imageSize * 0.3;
-    const iconX = imageX + (imageSize - iconSize) / 2;
-    const iconY = imageY + (imageSize - iconSize) / 2;
+    // Círculo central minimalista
+    const circleSize = imageSize * 0.4;
+    const circleX = imageX + (imageSize - circleSize) / 2;
+    const circleY = imageY + (imageSize - circleSize) / 2;
     
-    doc.fontSize(iconSize / 2)
-       .fillColor('#999999')
-       .text('📷', iconX, iconY, { 
-         width: iconSize, 
+    doc.circle(circleX + circleSize/2, circleY + circleSize/2, circleSize/3)
+       .fillAndStroke('#f8f8f8', '#e8e8e8')
+       .lineWidth(1);
+    
+    // Ícono moderno centrado
+    doc.fontSize(circleSize * 0.3)
+       .fillColor('#bdbdbd')
+       .text('�', circleX + circleSize*0.25, circleY + circleSize*0.25, { 
+         width: circleSize*0.5, 
          align: 'center' 
        });
     
-    // Texto más discreto
+    // Texto discreto en la parte inferior
     doc.fontSize(7)
        .font('Helvetica')
-       .fillColor('#cccccc')
-       .text('Sin imagen', imageX + 10, imageY + imageSize - 18, { 
-         width: imageSize - 20, 
+       .fillColor('#e0e0e0')
+       .text('Sin imagen', imageX + 5, imageY + imageSize - 15, { 
+         width: imageSize - 10, 
          align: 'center' 
        });
   }
