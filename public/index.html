@@ -742,15 +742,11 @@
                     <div class="action-buttons">
                         <button class="btn" onclick="getAllProducts()">
                             <i class="fas fa-list"></i>
-                            Obtener Todos los Productos
+                            Ver Gestión de Productos
                         </button>
                         <button class="btn" onclick="toggleAddProductForm()">
                             <i class="fas fa-plus"></i>
                             Agregar Nuevo Producto
-                        </button>
-                        <button class="btn" onclick="getProductStats()">
-                            <i class="fas fa-chart-bar"></i>
-                            Ver Estadísticas
                         </button>
                     </div>
 
@@ -980,52 +976,8 @@
         }
 
         function getAllProducts() {
-            showLoading('products');
-            fetch(`${API_BASE_URL}/api/products`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        let html = '<div class="products-grid">';
-                        data.data.forEach(product => {
-                            const imageUrl = buildSupabaseImageUrl(product.imagen_url);
-                            
-                            html += `
-                                <div class="product-card">
-                                    ${imageUrl ? 
-                                        `<img src="${imageUrl}" alt="${product.nombre}" class="product-image" 
-                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                                         <div class="product-image-placeholder" style="display: none;">
-                                             <i class="fas fa-image" style="margin-right: 0.5rem;"></i>
-                                             Sin imagen
-                                         </div>` 
-                                        : 
-                                        `<div class="product-image-placeholder">
-                                             <i class="fas fa-image" style="margin-right: 0.5rem;"></i>
-                                             Sin imagen
-                                         </div>`
-                                    }
-                                    <div class="product-name">${product.nombre || 'Sin nombre'}</div>
-                                    <div class="product-id">ID: ${product.id}</div>
-                                    <div class="product-description">${product.descripcion || 'Sin descripción'}</div>
-                                    <div class="product-price">$${product.precio || '0'}</div>
-                                    <div class="product-actions">
-                                        <button class="btn-delete" onclick="deleteProduct('${product.id}')" title="Eliminar producto">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        html += '</div>';
-                        
-                        showResult('products', html);
-                    } else {
-                        showResult('products', `Error: ${data.message}`, true);
-                    }
-                })
-                .catch(error => {
-                    showResult('products', `Error de conexión: ${error.message}`, true);
-                });
+            // Redirigir a la página de gestión de productos
+            window.location.href = `${API_BASE_URL}/GestionProductos`;
         }
 
         function getProductById() {
@@ -1059,42 +1011,7 @@
                 });
         }
 
-        function getProductStats() {
-            showLoading('products');
-            fetch(`${API_BASE_URL}/api/products/stats`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const stats = data.data;
-                        const html = `
-                            <div class="stats-container">
-                                <div class="stat-card">
-                                    <div class="stat-number">${stats.total_productos}</div>
-                                    <div class="stat-label">Total Productos</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-number">$${stats.precio_promedio}</div>
-                                    <div class="stat-label">Precio Promedio</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-number">$${stats.precio_maximo}</div>
-                                    <div class="stat-label">Precio Máximo</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-number">$${stats.precio_minimo}</div>
-                                    <div class="stat-label">Precio Mínimo</div>
-                                </div>
-                            </div>
-                        `;
-                        showResult('products', html);
-                    } else {
-                        showResult('products', `Error: ${data.message}`, true);
-                    }
-                })
-                .catch(error => {
-                    showResult('products', `Error de conexión: ${error.message}`, true);
-                });
-        }
+
 
         function generatePDF() {
             showLoading('pdfs');

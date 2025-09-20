@@ -241,7 +241,7 @@
         <!-- Sección de productos -->
         <div class="endpoint-section">
             <h3 class="endpoint-title">📋 Gestión de Productos</h3>
-            <button class="btn btn-success" onclick="getAllProducts()">Obtener Todos los Productos</button>
+            <button class="btn btn-success" onclick="getAllProducts()">Ver Gestión de Productos</button>
             <button class="btn btn-warning" onclick="getProductStats()">Ver Estadísticas</button>
             
             <div class="input-group">
@@ -319,9 +319,9 @@
         }
 
         function getAllProducts() {
-            console.log('Redireccionando a la página de productos...');
-            // Redireccionar a la página de productos
-            window.location.href = 'productos.html';
+            console.log('Redireccionando a la página de gestión de productos...');
+            // Redireccionar a la nueva página de gestión de productos
+            window.location.href = '/GestionProductos';
         }
 
         function getProductById() {

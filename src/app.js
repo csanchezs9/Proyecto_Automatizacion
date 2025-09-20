@@ -44,6 +44,11 @@ app.use(express.static(path.join(__dirname, '../public')));
 // Rutas principales
 app.use('/api/products', productRoutes);
 
+// Ruta para la página de gestión de productos
+app.get('/GestionProductos', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/gestion-productos.html'));
+});
+
 // Ruta de bienvenida
 app.get('/', (req, res) => {
   res.json({
