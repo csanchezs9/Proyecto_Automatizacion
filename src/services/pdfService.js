@@ -5,6 +5,303 @@ const https = require('https');
 const Jimp = require('jimp');
 
 class PDFService {
+  /**
+   * Generar catálogo PDF con filtros específicos
+   */
+  static async generateCatalogPDF(products, options, outputPath) {
+    try {
+      const doc = new PDFDocument({
+        size: 'A4',
+        margins: { top: 50, bottom: 50, left: 50, right: 50 },
+        info: {
+          Title: options.title || 'Catálogo de Productos',
+          Author: 'Sistema de Gestión Automatizada',
+          Subject: options.subtitle || 'Catálogo generado automáticamente',
+          Keywords: 'productos, catálogo, automatización',
+          CreationDate: new Date(),
+          ModDate: new Date()
+        }
+      });
+
+      const writeStream = fs.createWriteStream(outputPath);
+      doc.pipe(writeStream);
+
+      // Configuración de colores empresariales
+      const colors = {
+        primary: '#2563eb',
+        secondary: '#64748b',
+        accent: '#f59e0b',
+        background: '#f8fafc',
+        text: '#1e293b'
+      };
+
+      // Header empresarial
+      await this.addCatalogHeader(doc, options, colors);
+
+      // Estadísticas del catálogo
+      await this.addCatalogStats(doc, products, colors);
+
+      // Productos con diseño mejorado
+      let yPosition = 300;
+      const productsPerPage = 6;
+      let productsOnCurrentPage = 0;
+
+      for (let i = 0; i < products.length; i++) {
+        const product = products[i];
+        
+        if (productsOnCurrentPage >= productsPerPage) {
+          doc.addPage();
+          yPosition = 50;
+          productsOnCurrentPage = 0;
+        }
+
+        await this.addProductToCatalog(doc, product, yPosition, colors);
+        yPosition += 120;
+        productsOnCurrentPage++;
+      }
+
+      // Footer con información de contacto
+      await this.addCatalogFooter(doc, colors);
+
+      doc.end();
+
+      return new Promise((resolve, reject) => {
+        writeStream.on('finish', () => {
+          console.log(`✅ Catálogo PDF generado: ${outputPath}`);
+          resolve(outputPath);
+        });
+        writeStream.on('error', reject);
+      });
+    } catch (error) {
+      console.error('❌ Error generando catálogo PDF:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Agregar header profesional al catálogo
+   */
+  static async addCatalogHeader(doc, options, colors) {
+    // Fondo del header
+    doc.rect(0, 0, doc.page.width, 80).fill(colors.primary);
+
+    // Logo y título
+    doc.fillColor('white')
+       .fontSize(24)
+       .font('Helvetica-Bold')
+       .text('🏪 GESTIÓN AUTOMATIZADA', 60, 25);
+
+    doc.fontSize(12)
+       .font('Helvetica')
+       .text('Sistema de Catálogos Inteligentes', 60, 50);
+
+    // Información del catálogo
+    doc.fillColor(colors.text)
+       .fontSize(20)
+       .font('Helvetica-Bold')
+       .text(options.title, 60, 110);
+
+    if (options.subtitle) {
+      doc.fontSize(14)
+         .font('Helvetica')
+         .fillColor(colors.secondary)
+         .text(options.subtitle, 60, 140);
+    }
+
+    if (options.filterInfo) {
+      doc.fontSize(12)
+         .fillColor(colors.accent)
+         .text(`📊 ${options.filterInfo}`, 60, 165);
+    }
+
+    // Fecha y hora de generación
+    const now = new Date();
+    doc.fontSize(10)
+       .fillColor(colors.secondary)
+       .text(`Generado el ${now.toLocaleDateString()} a las ${now.toLocaleTimeString()}`, 
+             doc.page.width - 250, 110);
+  }
+
+  /**
+   * Agregar estadísticas del catálogo
+   */
+  static async addCatalogStats(doc, products, colors) {
+    const stats = this.calculateProductStats(products);
+    const startY = 200;
+
+    // Fondo para las estadísticas
+    doc.rect(50, startY, doc.page.width - 100, 80)
+       .fill(colors.background)
+       .stroke(colors.primary);
+
+    // Estadísticas en columnas
+    const statItems = [
+      { label: 'Total Productos', value: stats.total },
+      { label: 'Valor Inventario', value: `€${stats.totalValue}` },
+      { label: 'Stock Total', value: stats.totalStock },
+      { label: 'Precio Promedio', value: `€${stats.avgPrice}` }
+    ];
+
+    const columnWidth = (doc.page.width - 120) / 4;
+    
+    statItems.forEach((stat, index) => {
+      const x = 70 + (index * columnWidth);
+      
+      doc.fillColor(colors.text)
+         .fontSize(18)
+         .font('Helvetica-Bold')
+         .text(stat.value, x, startY + 15);
+         
+      doc.fillColor(colors.secondary)
+         .fontSize(10)
+         .font('Helvetica')
+         .text(stat.label, x, startY + 40);
+    });
+  }
+
+  /**
+   * Agregar producto individual al catálogo
+   */
+  static async addProductToCatalog(doc, product, yPosition, colors) {
+    const startX = 60;
+    const imageSize = 80;
+    const contentX = startX + imageSize + 20;
+
+    // Fondo del producto
+    doc.rect(startX - 10, yPosition - 10, doc.page.width - 120, 110)
+       .fill('#ffffff')
+       .stroke(colors.secondary)
+       .lineWidth(0.5);
+
+    // Imagen del producto
+    try {
+      if (product.imagen_url && product.imagen_url !== 'Sin imagen') {
+        const imageBuffer = await this.downloadAndCompressImage(product.imagen_url);
+        if (imageBuffer) {
+          doc.image(imageBuffer, startX, yPosition, { 
+            width: imageSize, 
+            height: imageSize,
+            fit: [imageSize, imageSize]
+          });
+        }
+      } else {
+        // Placeholder para productos sin imagen
+        doc.rect(startX, yPosition, imageSize, imageSize)
+           .fill(colors.background)
+           .stroke(colors.secondary);
+           
+        doc.fillColor(colors.secondary)
+           .fontSize(10)
+           .text('Sin imagen', startX + 15, yPosition + 35);
+      }
+    } catch (error) {
+      console.warn(`⚠️ Error cargando imagen para ${product.nombre}`);
+    }
+
+    // Información del producto
+    doc.fillColor(colors.text)
+       .fontSize(14)
+       .font('Helvetica-Bold')
+       .text(product.nombre || 'Sin nombre', contentX, yPosition, {
+         width: 300,
+         ellipsis: true
+       });
+
+    // Precio y descuento
+    let priceY = yPosition + 25;
+    if (product.descuento_porcentaje > 0) {
+      const discountedPrice = product.precio * (1 - product.descuento_porcentaje / 100);
+      
+      doc.fillColor(colors.secondary)
+         .fontSize(10)
+         .font('Helvetica')
+         .text(`€${product.precio.toFixed(2)}`, contentX, priceY)
+         .stroke();
+         
+      doc.fillColor(colors.accent)
+         .fontSize(14)
+         .font('Helvetica-Bold')
+         .text(`€${discountedPrice.toFixed(2)}`, contentX + 60, priceY - 2);
+         
+      doc.fillColor('red')
+         .fontSize(10)
+         .text(`-${product.descuento_porcentaje}%`, contentX + 130, priceY);
+    } else {
+      doc.fillColor(colors.primary)
+         .fontSize(16)
+         .font('Helvetica-Bold')
+         .text(`€${product.precio.toFixed(2)}`, contentX, priceY);
+    }
+
+    // Detalles del producto
+    const details = [
+      `SKU: ${product.sku || product.id}`,
+      `Talla: ${product.talla || 'N/A'}`,
+      `Categoría: ${product.categoria || 'General'}`,
+      `Stock: ${product.stock || 0} uds`
+    ];
+
+    doc.fillColor(colors.secondary)
+       .fontSize(9)
+       .font('Helvetica')
+       .text(details.join(' • '), contentX, yPosition + 50, {
+         width: 300
+       });
+
+    // Indicadores visuales
+    if (product.stock < 10) {
+      doc.fillColor('red')
+         .fontSize(8)
+         .text('⚠️ STOCK BAJO', contentX, yPosition + 70);
+    }
+
+    if (product.popularidad > 70) {
+      doc.fillColor(colors.accent)
+         .fontSize(8)
+         .text('⭐ POPULAR', contentX + 100, yPosition + 70);
+    }
+  }
+
+  /**
+   * Agregar footer al catálogo
+   */
+  static async addCatalogFooter(doc, colors) {
+    const pages = doc.bufferedPageRange();
+    
+    for (let i = 0; i < pages.count; i++) {
+      doc.switchToPage(i);
+      
+      // Footer
+      doc.rect(0, doc.page.height - 40, doc.page.width, 40)
+         .fill(colors.primary);
+         
+      doc.fillColor('white')
+         .fontSize(10)
+         .text('Generado automáticamente por Sistema de Gestión Empresarial', 
+               60, doc.page.height - 25);
+               
+      doc.text(`Página ${i + 1} de ${pages.count}`, 
+               doc.page.width - 100, doc.page.height - 25);
+    }
+  }
+
+  /**
+   * Calcular estadísticas de productos
+   */
+  static calculateProductStats(products) {
+    const total = products.length;
+    const totalValue = products.reduce((sum, p) => sum + (p.precio * (p.stock || 0)), 0);
+    const totalStock = products.reduce((sum, p) => sum + (p.stock || 0), 0);
+    const avgPrice = products.reduce((sum, p) => sum + p.precio, 0) / total;
+
+    return {
+      total,
+      totalValue: totalValue.toFixed(2),
+      totalStock,
+      avgPrice: avgPrice.toFixed(2)
+    };
+  }
+
   // Función para descargar y comprimir imagen desde Supabase Storage
   static async downloadAndCompressImage(url) {
     try {

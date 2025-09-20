@@ -8,6 +8,7 @@ require('dotenv').config();
 
 const { testConnection } = require('./config/database');
 const productRoutes = require('./routes/productRoutes');
+const enterpriseRoutes = require('./routes/enterpriseRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -43,10 +44,15 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 // Rutas principales
 app.use('/api/products', productRoutes);
+app.use('/api/enterprise', enterpriseRoutes);
 
-// Ruta para la página de gestión de productos
+// Rutas para las páginas
 app.get('/GestionProductos', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/gestion-productos.html'));
+});
+
+app.get('/DashboardEmpresarial', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/dashboard-empresarial.html'));
 });
 
 // Ruta de bienvenida

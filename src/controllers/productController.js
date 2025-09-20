@@ -1,4 +1,4 @@
-const { pool } = require('../config/database');
+                                                                                                    const { pool } = require('../config/database');
 const PDFService = require('../services/pdfService');
 const ImageUploadService = require('../services/imageUploadService');
 const path = require('path');
@@ -39,7 +39,7 @@ class ProductController {
   static async getAllProducts(req, res) {
     try {
       const query = `
-        SELECT id, nombre, descripcion, precio, imagen_url, creado_en 
+        SELECT id, nombre, descripcion, precio, talla, cantidad, imagen_url, creado_en 
         FROM productos 
         ORDER BY id ASC
       `;
@@ -68,7 +68,7 @@ class ProductController {
       const { id } = req.params;
       
       const query = `
-        SELECT id, nombre, descripcion, precio, imagen_url, creado_en 
+        SELECT id, nombre, descripcion, precio, talla, cantidad, imagen_url, creado_en 
         FROM productos 
         WHERE id = $1
       `;
@@ -209,7 +209,7 @@ class ProductController {
   // Crear nuevo producto
   static async createProduct(req, res) {
     try {
-      const { nombre, descripcion, precio, imagen_url } = req.body;
+      const { nombre, descripcion, precio, talla, cantidad, imagen_url } = req.body;
       let finalImageUrl = imagen_url || null;
 
       // Validaciones básicas
@@ -226,6 +226,17 @@ class ProductController {
         return res.status(400).json({
           success: false,
           message: 'El precio debe ser mayor o igual a 0'
+        });
+      }
+
+      // Validaciones para las nuevas columnas
+      const tallaFinal = talla || 'Única';
+      const cantidadFinal = cantidad !== undefined ? parseInt(cantidad) : 10;
+
+      if (cantidadFinal < 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'La cantidad debe ser mayor o igual a 0'
         });
       }
 
@@ -260,12 +271,12 @@ class ProductController {
       
       // Insertar producto en la base de datos con ID personalizado
       const query = `
-        INSERT INTO productos (id, nombre, descripcion, precio, imagen_url, creado_en) 
-        VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP) 
-        RETURNING id, nombre, descripcion, precio, imagen_url, creado_en
+        INSERT INTO productos (id, nombre, descripcion, precio, talla, cantidad, imagen_url, creado_en) 
+        VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP) 
+        RETURNING id, nombre, descripcion, precio, talla, cantidad, imagen_url, creado_en
       `;
       
-      const result = await pool.query(query, [customId, nombre, descripcion, precio, finalImageUrl]);
+      const result = await pool.query(query, [customId, nombre, descripcion, precio, tallaFinal, cantidadFinal, finalImageUrl]);
       
       res.status(201).json({
         success: true,
@@ -350,9 +361,9 @@ class ProductController {
     try {
       const queries = {
         total: 'SELECT COUNT(*) as total FROM productos',
-        avgPrice: 'SELECT AVG(precio) as promedio FROM productos',
-        maxPrice: 'SELECT MAX(precio) as maximo FROM productos',
-        minPrice: 'SELECT MIN(precio) as minimo FROM productos'
+        avgPrice: 'SELECT AVG(CAST(precio AS NUMERIC)) as promedio FROM productos WHERE precio IS NOT NULL',
+        maxPrice: 'SELECT MAX(CAST(precio AS NUMERIC)) as maximo FROM productos WHERE precio IS NOT NULL',
+        minPrice: 'SELECT MIN(CAST(precio AS NUMERIC)) as minimo FROM productos WHERE precio IS NOT NULL'
       };
 
       const results = await Promise.all(

@@ -82,6 +82,40 @@
             transform: translateX(5px);
         }
 
+        /* Estilo especial para Dashboard Empresarial */
+        .nav-link.enterprise-dashboard {
+            background: linear-gradient(135deg, #f59e0b20, #d9770620);
+            border: 1px solid #f59e0b40;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link.enterprise-dashboard::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .nav-link.enterprise-dashboard:hover::before {
+            left: 100%;
+        }
+
+        .nav-link.enterprise-dashboard:hover {
+            background: linear-gradient(135deg, #f59e0b30, #d9770630);
+            color: #fbbf24;
+            transform: translateX(8px);
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .nav-link.enterprise-dashboard i:first-child {
+            color: #fbbf24;
+        }
+
         .nav-link i {
             font-size: 18px;
             width: 20px;
@@ -252,6 +286,29 @@
 
         .input-group input::placeholder {
             color: #64748b;
+        }
+
+        /* Select styling */
+        .input-group select {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(30, 41, 59, 0.5);
+            border: 2px solid #475569;
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+
+        .input-group select option {
+            background: #1e293b;
+            color: #ffffff;
         }
 
         /* Results */
@@ -701,6 +758,13 @@
             
             <ul class="nav-menu">
                 <li class="nav-item">
+                    <a class="nav-link enterprise-dashboard" onclick="openEnterpriseDashboard()">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard Empresarial</span>
+                        <i class="fas fa-external-link-alt" style="margin-left: auto; font-size: 0.8rem; opacity: 0.7;"></i>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link active" onclick="showSection('products')">
                         <i class="fas fa-boxes"></i>
                         <span>Gestión de Productos</span>
@@ -764,6 +828,28 @@
                         <div class="input-group">
                             <label for="productPrice">Precio:</label>
                             <input type="number" id="productPrice" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <div class="input-group">
+                            <label for="productTalla">Talla:</label>
+                            <select id="productTalla">
+                                <option value="Única">Única</option>
+                                <option value="XS">XS</option>
+                                <option value="S">S</option>
+                                <option value="M">M</option>
+                                <option value="L">L</option>
+                                <option value="XL">XL</option>
+                                <option value="XXL">XXL</option>
+                                <option value="34">34</option>
+                                <option value="36">36</option>
+                                <option value="38">38</option>
+                                <option value="40">40</option>
+                                <option value="42">42</option>
+                                <option value="44">44</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="productCantidad">Cantidad en Stock:</label>
+                            <input type="number" id="productCantidad" placeholder="10" min="0" value="10">
                         </div>
                         <div class="input-group">
                             <label for="productImage">Imagen del Producto:</label>
@@ -897,6 +983,58 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('show');
+        }
+
+        function openEnterpriseDashboard() {
+            // Abrir Dashboard Empresarial en nueva pestaña
+            const dashboardUrl = `${API_BASE_URL}/DashboardEmpresarial`;
+            window.open(dashboardUrl, '_blank');
+            
+            // Mostrar notificación
+            showNotification('🚀 Abriendo Dashboard Empresarial...', 'info');
+            
+            // Close sidebar on mobile
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('show');
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            // Crear elemento de notificación
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' : 
+                           type === 'error' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 
+                           'linear-gradient(135deg, #3b82f6, #2563eb)'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                font-weight: 500;
+                transform: translateX(400px);
+                transition: transform 0.3s ease;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Animar entrada
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Remover después de 3 segundos
+            setTimeout(() => {
+                notification.style.transform = 'translateX(400px)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
         }
 
         function showSection(section) {
@@ -1091,6 +1229,8 @@
             document.getElementById('productName').value = '';
             document.getElementById('productDescription').value = '';
             document.getElementById('productPrice').value = '';
+            document.getElementById('productTalla').value = 'Única';
+            document.getElementById('productCantidad').value = '10';
             document.getElementById('productImage').value = '';
             document.getElementById('imagePreview').style.display = 'none';
         }
@@ -1141,6 +1281,8 @@
             const name = document.getElementById('productName').value.trim();
             const description = document.getElementById('productDescription').value.trim();
             const price = document.getElementById('productPrice').value;
+            const talla = document.getElementById('productTalla').value;
+            const cantidad = document.getElementById('productCantidad').value;
             const imageFile = document.getElementById('productImage').files[0];
 
             // Validaciones
@@ -1159,6 +1301,11 @@
                 return;
             }
 
+            if (!cantidad || parseInt(cantidad) < 0) {
+                showResult('products', 'Error: La cantidad debe ser un número válido mayor o igual a 0', true);
+                return;
+            }
+
             showLoading('products');
 
             try {
@@ -1167,6 +1314,8 @@
                 formData.append('nombre', name);
                 formData.append('descripcion', description);
                 formData.append('precio', parseFloat(price));
+                formData.append('talla', talla);
+                formData.append('cantidad', parseInt(cantidad));
                 
                 // Agregar imagen si se seleccionó una
                 if (imageFile) {

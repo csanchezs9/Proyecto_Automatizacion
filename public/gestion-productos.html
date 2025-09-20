@@ -314,6 +314,47 @@
             font-size: 0.8rem;
         }
 
+        .product-talla {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .product-talla i {
+            color: #60a5fa;
+        }
+
+        .product-stock {
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .stock-ok {
+            color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .stock-low {
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .stock-empty {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
         .loading {
             text-align: center;
             padding: 50px;
@@ -492,6 +533,7 @@
                 if (data.success && data.data && data.data.length > 0) {
                     allProducts = data.data;
                     displayProducts(allProducts);
+                    loadStats(); // Recalcular estadísticas con datos de stock
                     hideLoading();
                 } else {
                     showEmpty();
@@ -517,6 +559,21 @@
 
         function displayStats(stats) {
             const statsContainer = document.getElementById('statsContainer');
+            
+            // Calcular estadísticas de stock desde allProducts
+            let totalStock = 0;
+            let stockBajo = 0;
+            let sinStock = 0;
+            
+            if (allProducts && allProducts.length > 0) {
+                allProducts.forEach(product => {
+                    const cantidad = parseInt(product.cantidad) || 0;
+                    totalStock += cantidad;
+                    if (cantidad === 0) sinStock++;
+                    else if (cantidad < 5) stockBajo++;
+                });
+            }
+            
             statsContainer.innerHTML = `
                 <div class="stat-card">
                     <i class="fas fa-boxes"></i>
@@ -524,19 +581,24 @@
                     <p>Total Productos</p>
                 </div>
                 <div class="stat-card">
+                    <i class="fas fa-warehouse"></i>
+                    <h3>${totalStock}</h3>
+                    <p>Total en Stock</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+                    <h3>${stockBajo}</h3>
+                    <p>Stock Bajo (&lt;5)</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-times-circle" style="color: #ef4444;"></i>
+                    <h3>${sinStock}</h3>
+                    <p>Sin Stock</p>
+                </div>
+                <div class="stat-card">
                     <i class="fas fa-dollar-sign"></i>
                     <h3>$${parseFloat(stats.precio_promedio).toLocaleString()}</h3>
                     <p>Precio Promedio</p>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-arrow-up"></i>
-                    <h3>$${parseFloat(stats.precio_maximo).toLocaleString()}</h3>
-                    <p>Precio Máximo</p>
-                </div>
-                <div class="stat-card">
-                    <i class="fas fa-arrow-down"></i>
-                    <h3>$${parseFloat(stats.precio_minimo).toLocaleString()}</h3>
-                    <p>Precio Mínimo</p>
                 </div>
             `;
         }
@@ -567,6 +629,10 @@
                     ? `$${parseFloat(product.precio).toLocaleString('es-ES')}`
                     : '$0';
 
+                const talla = product.talla || 'Única';
+                const cantidad = product.cantidad || 0;
+                const stockClass = cantidad < 5 ? 'stock-low' : cantidad === 0 ? 'stock-empty' : 'stock-ok';
+                
                 return `
                     <div class="product-card" data-product-name="${product.nombre.toLowerCase()}" data-product-id="${product.id.toLowerCase()}">
                         <div class="product-image">
@@ -576,6 +642,12 @@
                             <div class="product-id">${product.id}</div>
                             <h3>${product.nombre}</h3>
                             <div class="product-price">${precio}</div>
+                            <div class="product-talla">
+                                <i class="fas fa-tshirt"></i> Talla: <strong>${talla}</strong>
+                            </div>
+                            <div class="product-stock ${stockClass}">
+                                <i class="fas fa-boxes"></i> Stock: <strong>${cantidad}</strong>
+                            </div>
                             <div class="product-description">${product.descripcion || 'Sin descripción'}</div>
                             <div class="product-date">
                                 <i class="fas fa-calendar"></i> ${fecha}
@@ -599,7 +671,8 @@
             const filteredProducts = allProducts.filter(product => 
                 product.nombre.toLowerCase().includes(searchTerm) ||
                 product.id.toLowerCase().includes(searchTerm) ||
-                (product.descripcion && product.descripcion.toLowerCase().includes(searchTerm))
+                (product.descripcion && product.descripcion.toLowerCase().includes(searchTerm)) ||
+                (product.talla && product.talla.toLowerCase().includes(searchTerm))
             );
 
             displayProducts(filteredProducts);
