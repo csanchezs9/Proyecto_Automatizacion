@@ -39,6 +39,44 @@ router.get('/reports/business', EnterpriseController.generateBusinessReports.bin
 router.post('/alerts/setup', EnterpriseController.setupAutomaticAlerts.bind(EnterpriseController));
 
 /**
+ * @route POST /api/enterprise/send-to-telegram
+ * @desc Enviar detalles de alertas a Telegram
+ * @body {
+ *   productosSinStock: array,
+ *   stockBajo: array
+ * }
+ */
+router.post('/send-to-telegram', async (req, res) => {
+  try {
+    const TelegramService = require('../services/telegramService');
+    const telegram = new TelegramService();
+    
+    const { productosSinStock, stockBajo } = req.body;
+    
+    const alertDetails = {
+      productosSinStock: productosSinStock || [],
+      stockBajo: stockBajo || []
+    };
+    
+    const result = await telegram.sendAlertDetails(alertDetails);
+    
+    res.json({
+      success: true,
+      message: 'Alertas enviadas a Telegram correctamente',
+      data: result
+    });
+    
+  } catch (error) {
+    console.error('Error enviando a Telegram:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error enviando alertas a Telegram',
+      error: error.message
+    });
+  }
+});
+
+/**
  * @route GET /api/enterprise/analytics/inventory
  * @desc Análisis detallado de inventario
  */
