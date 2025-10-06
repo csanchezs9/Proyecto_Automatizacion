@@ -626,6 +626,25 @@
             loadStagnantProducts();
             loadAutomaticTasks();
             setupAutoRefresh();
+            
+            // Función de limpieza global para todos los modales de Bootstrap
+            document.querySelectorAll('.modal').forEach(modalElement => {
+                modalElement.addEventListener('hidden.bs.modal', function () {
+                    // Forzar restauración del scroll del body
+                    setTimeout(() => {
+                        document.body.style.overflow = 'auto';
+                        document.body.style.paddingRight = '0';
+                        document.documentElement.style.overflow = 'auto';
+                        
+                        // Remover clases de Bootstrap
+                        document.body.classList.remove('modal-open');
+                        
+                        // Limpiar backdrops residuales
+                        const backdrops = document.querySelectorAll('.modal-backdrop');
+                        backdrops.forEach(backdrop => backdrop.remove());
+                    }, 100);
+                });
+            });
         });
 
         // Data helpers
@@ -1941,7 +1960,24 @@ function renderSizeCatalogSummary(sizeSummaries = [], fileName = '') {
 
         function showSuccessMessage(message) {
             document.getElementById('successMessage').innerHTML = message;
-            const modal = new bootstrap.Modal(document.getElementById('successModal'));
+            const modalElement = document.getElementById('successModal');
+            const modal = new bootstrap.Modal(modalElement);
+            
+            // Escuchar cuando se cierra el modal para restaurar scroll
+            modalElement.addEventListener('hidden.bs.modal', function () {
+                // Forzar restauración del scroll
+                document.body.style.overflow = 'auto';
+                document.body.style.paddingRight = '0';
+                document.documentElement.style.overflow = 'auto';
+                
+                // Remover clases de Bootstrap que bloquean scroll
+                document.body.classList.remove('modal-open');
+                
+                // Remover backdrop si quedó
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => backdrop.remove());
+            }, { once: true });
+            
             modal.show();
         }
 

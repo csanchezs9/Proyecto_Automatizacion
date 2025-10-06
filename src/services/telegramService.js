@@ -55,7 +55,6 @@ class TelegramService {
         parse_mode: 'Markdown'
       });
 
-      console.log('✅ Detalles de alertas enviados por Telegram');
       return { success: true, message: 'Alertas enviadas correctamente' };
       
     } catch (error) {
@@ -76,7 +75,6 @@ class TelegramService {
         parse_mode: 'Markdown' 
       });
       
-      console.log('✅ Conexión con Telegram exitosa');
       return { success: true, bot: me };
     } catch (error) {
       console.error('❌ Error conectando con Telegram:', error);
