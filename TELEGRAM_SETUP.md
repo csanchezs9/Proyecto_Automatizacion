@@ -14,7 +14,7 @@ TELEGRAM_CHAT_ID=1558851125
 ```
 
 ### 2. Dependencias Instaladas
-
+ddd
 ```bash
 npm install node-telegram-bot-api
 ```
