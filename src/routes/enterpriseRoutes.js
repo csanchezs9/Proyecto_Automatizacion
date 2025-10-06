@@ -255,4 +255,128 @@ router.get('/dashboard/metrics', async (req, res) => {
   }
 });
 
+/**
+ * @route GET /api/enterprise/alerts
+ * @desc Obtiene todas las alertas de inventario (sin stock y stock bajo)
+ */
+router.get('/alerts', async (req, res) => {
+  try {
+    const { pool } = require('../config/database');
+    
+    const { rows: productos } = await pool.query(
+      'SELECT id, nombre, cantidad, precio, talla FROM productos ORDER BY cantidad ASC'
+    );
+
+    // Productos sin stock (cantidad = 0)
+    const sinStock = productos.filter(p => p.cantidad === 0);
+
+    // Productos con stock bajo (cantidad < 5 pero > 0)
+    const stockBajo = productos.filter(p => p.cantidad > 0 && p.cantidad < 5);
+
+    const alerts = [];
+
+    // Alerta de productos sin stock
+    if (sinStock.length > 0) {
+      alerts.push({
+        id: 'sin-stock',
+        type: 'critical',
+        title: 'Productos Sin Stock',
+        icon: '🔴',
+        count: sinStock.length,
+        message: `${sinStock.length} producto${sinStock.length > 1 ? 's' : ''} sin inventario`,
+        priority: 'high',
+        details: sinStock.map(p => ({
+          id: p.id,
+          nombre: p.nombre,
+          cantidad: p.cantidad,
+          talla: p.talla || 'N/A',
+          precio: parseFloat(p.precio) || 0
+        }))
+      });
+    }
+
+    // Alerta de stock bajo
+    if (stockBajo.length > 0) {
+      alerts.push({
+        id: 'stock-bajo',
+        type: 'warning',
+        title: 'Stock Bajo',
+        icon: '⚠️',
+        count: stockBajo.length,
+        message: `${stockBajo.length} producto${stockBajo.length > 1 ? 's' : ''} con menos de 5 unidades`,
+        priority: 'medium',
+        details: stockBajo.map(p => ({
+          id: p.id,
+          nombre: p.nombre,
+          cantidad: p.cantidad,
+          talla: p.talla || 'N/A',
+          precio: parseFloat(p.precio) || 0
+        }))
+      });
+    }
+
+    // Alerta de análisis automático (siempre presente)
+    alerts.push({
+      id: 'analisis-automatico',
+      type: 'info',
+      title: 'Análisis Automático',
+      icon: '📊',
+      count: 0,
+      message: 'Sistema verificando tendencias de inventario',
+      priority: 'low',
+      details: []
+    });
+
+    res.json({
+      success: true,
+      data: {
+        alerts: alerts,
+        totalAlerts: sinStock.length + stockBajo.length,
+        timestamp: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching enterprise alerts:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener las alertas',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route GET /api/enterprise/tasks
+ * @desc Obtiene las tareas automáticas programadas
+ */
+router.get('/tasks', async (req, res) => {
+  try {
+    const tasks = [
+      {
+        id: 1,
+        name: "Verificación de Alertas",
+        schedule: "Cada segundo",
+        status: "running",
+        enabled: true,
+        lastRun: new Date().toISOString(),
+        nextRun: new Date(Date.now() + 1000).toISOString() // +1 segundo
+      }
+    ];
+
+    res.json({
+      success: true,
+      data: tasks
+    });
+
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener las tareas automáticas',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

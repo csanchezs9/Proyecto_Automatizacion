@@ -117,6 +117,7 @@
             padding: 12px;
             margin-bottom: 8px;
             color: var(--text-primary);
+            transition: all 0.3s ease;
         }
 
         .alert-item.high-priority {
@@ -417,22 +418,16 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-6 mb-3">
                                 <button class="btn action-btn w-100" onclick="generateAutomaticCatalogs()">
                                     <i class="fas fa-folder-plus me-2"></i>
                                     Generar Catálogos por Talla
                                 </button>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-6 mb-3">
                                 <button class="btn action-btn w-100" onclick="generateBusinessReport()">
                                     <i class="fas fa-chart-line me-2"></i>
                                     Reporte Empresarial
-                                </button>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <button class="btn action-btn w-100" onclick="setupAutomaticAlerts()">
-                                    <i class="fas fa-bell-slash me-2"></i>
-                                    Configurar Alertas
                                 </button>
                             </div>
                         </div>
@@ -505,11 +500,14 @@
             <!-- Alerts & Tasks -->
             <div class="col-md-4 mb-4">
                 <div class="card h-100">
-                    <div class="card-header">
+                    <div class="card-header d-flex justify-content-between align-items-center">
                         <h6 class="mb-0">
                             <i class="fas fa-bell me-2"></i>
                             Alertas y Tareas Automáticas
                         </h6>
+                        <button class="btn btn-sm btn-outline-light" onclick="openAlertsModal()" style="font-size: 0.85rem;">
+                            <i class="fas fa-expand-alt me-1"></i>Ver más
+                        </button>
                     </div>
                     <div class="card-body">
                         <div id="alertsContainer">
@@ -523,17 +521,10 @@
                         
                         <h6>Tareas Automáticas</h6>
                         <div id="automaticTasks">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Catálogos Diarios</span>
-                                <span class="task-status scheduled">08:00 AM</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Verificación de Alertas</span>
-                                <span class="task-status running">Cada hora</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Reportes Semanales</span>
-                                <span class="task-status scheduled">Lunes</span>
+                            <div class="text-center text-muted py-3">
+                                <i class="fas fa-cog fa-spin fa-2x mb-2"></i>
+                                <p class="mb-0">Esperando configuración del backend...</p>
+                                <small>Las tareas automáticas se mostrarán cuando el servicio esté disponible</small>
                             </div>
                         </div>
                     </div>
@@ -633,6 +624,7 @@
             loadFilterOptions();
             loadOpportunities();
             loadStagnantProducts();
+            loadAutomaticTasks();
             setupAutoRefresh();
         });
 
@@ -1427,74 +1419,6 @@ function renderSizeCatalogSummary(sizeSummaries = [], fileName = '') {
             }
         }
 
-        // Setup automatic alerts
-        async function setupAutomaticAlerts() {
-            showLoading('Configurando alertas automáticas...');
-
-            try {
-                const response = await fetch(`${ENTERPRISE_API_URL}/alerts/setup`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        alertTypes: ['stock_bajo', 'productos_estancados', 'oportunidades_precio']
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status} - ${response.statusText}`);
-                }
-
-                const result = await response.json();
-
-                if (!result.success) {
-                    throw new Error(result.message || 'No se pudieron configurar las alertas');
-                }
-
-                const alerts = Array.isArray(result.data?.alerts) ? result.data.alerts : [];
-                const summaryByType = result.data?.summaryByType || {};
-
-                latestGeneratedAlerts = alerts;
-                renderEnterpriseAlerts(alerts);
-
-                const summaryList = Object.entries(summaryByType)
-                    .filter(([, count]) => typeof count === 'number')
-                    .map(([type, count]) => `<li>${formatAlertTypeLabel(type)}: ${count}</li>`)
-                    .join('');
-
-                const previewHtml = alerts.slice(0, 3).map(alert => {
-                    const productName = alert.product?.nombre || formatAlertTypeLabel(alert.tipo_alerta);
-                    return `
-                        <div class="mb-2">
-                            <strong>${getAlertIcon(alert.tipo_alerta)} ${productName}</strong><br>
-                            <small class="text-muted">${alert.mensaje}</small>
-                        </div>
-                    `;
-                }).join('');
-
-                const summaryHtml = summaryList
-                    ? `<h6 class="mt-3 mb-1">Resumen por tipo</h6><ul class="mb-0">${summaryList}</ul>`
-                    : '<p class="mb-2">No se generaron nuevas alertas.</p>';
-
-                const previewSection = alerts.length
-                    ? `<hr><h6 class="mb-2">Primeras alertas</h6>${previewHtml}`
-                    : '';
-
-                hideLoading();
-                showSuccessMessage(`
-                    <h6>Alertas Configuradas</h6>
-                    <p class="mb-2">${alerts.length ? `Se generaron ${alerts.length} alertas automáticas.` : 'No se generaron alertas nuevas.'}</p>
-                    ${summaryHtml}
-                    ${previewSection}
-                `);
-            } catch (error) {
-                hideLoading();
-                console.error('Error configurando alertas:', error);
-                alert('Error configurando alertas: ' + error.message);
-            }
-        }
-
         // Load opportunities (simulated for development)
         async function loadOpportunities() {
             try {
@@ -1658,55 +1582,170 @@ function renderSizeCatalogSummary(sizeSummaries = [], fileName = '') {
             }
         }
 
-        // Load enterprise alerts
+        // Variable global para guardar las alertas
+        let globalAlertsData = null;
+
+        // Load enterprise alerts from backend (resumen)
         async function loadEnterpriseAlerts(productos) {
             try {
-                if (Array.isArray(latestGeneratedAlerts)) {
-                    renderEnterpriseAlerts(latestGeneratedAlerts);
-                    return;
-                }
-
                 const container = document.getElementById('alertsContainer');
                 
-                if (Array.isArray(productos) && productos.length > 0) {
-                    const stockBajo = productos.filter(p => p.cantidad < 5);
-                    const sinStock = productos.filter(p => p.cantidad === 0);
-                    
-                    let alertsHTML = '';
-                    
-                    if (sinStock.length > 0) {
-                        alertsHTML += `
-                            <div class="alert-item high-priority">
-                                <strong>🔴 Productos Sin Stock</strong><br>
-                                <small>${sinStock.length} productos sin inventario</small>
-                            </div>
-                        `;
-                    }
-                    
-                    if (stockBajo.length > 0) {
-                        alertsHTML += `
-                            <div class="alert-item">
-                                <strong>⚠ Stock Bajo</strong><br>
-                                <small>${stockBajo.length} productos con menos de 5 unidades</small>
-                            </div>
-                        `;
-                    }
+                // Llamar al backend para obtener las alertas
+                const response = await fetch('http://localhost:3001/api/enterprise/alerts');
+                const result = await response.json();
+                
+                if (!result.success || !result.data || !result.data.alerts) {
+                    container.innerHTML = '<div class="text-center text-muted py-3">No hay alertas pendientes</div>';
+                    return;
+                }
+                
+                // Guardar datos globalmente para el modal
+                globalAlertsData = result.data;
+                
+                const alerts = result.data.alerts;
+                let alertsHTML = '';
+                
+                // Mostrar solo resumen sin detalles
+                alerts.forEach(alert => {
+                    const priorityClass = alert.priority === 'high' ? 'high-priority' : '';
                     
                     alertsHTML += `
-                        <div class="alert-item">
-                            <strong>📊 Análisis Automático</strong><br>
-                            <small>Sistema verificando tendencias de inventario</small>
+                        <div class="alert-item ${priorityClass}">
+                            <strong>${alert.icon} ${alert.title}</strong><br>
+                            <small>${alert.message}</small>
                         </div>
                     `;
-                    
-                    container.innerHTML = alertsHTML || '<div class="text-center text-muted py-3">No hay alertas pendientes</div>';
-                } else if (container) {
-                    container.innerHTML = '<div class="text-center text-muted py-3">No hay alertas pendientes</div>';
-                }
+                });
+                
+                container.innerHTML = alertsHTML || '<div class="text-center text-muted py-3">No hay alertas pendientes</div>';
+                
             } catch (error) {
                 console.error('Error loading enterprise alerts:', error);
+                const container = document.getElementById('alertsContainer');
+                container.innerHTML = '<div class="text-center text-muted py-3">Error al cargar alertas</div>';
             }
         }
+        
+        // Abrir modal con detalles completos
+        function openAlertsModal() {
+            const modal = document.getElementById('alertsModal');
+            const modalBody = document.getElementById('alertsModalBody');
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevenir scroll del body
+            
+            if (!globalAlertsData || !globalAlertsData.alerts) {
+                modalBody.innerHTML = '<div class="text-center text-muted py-5">No hay datos de alertas disponibles</div>';
+                return;
+            }
+            
+            let modalHTML = '<h5 class="mb-4"><i class="fas fa-exclamation-triangle me-2"></i>Alertas de Inventario</h5>';
+            
+            // Renderizar cada alerta con sus detalles
+            globalAlertsData.alerts.forEach(alert => {
+                const sectionClass = alert.priority === 'high' ? 'critical' : 
+                                    alert.priority === 'medium' ? 'warning' : 'info';
+                
+                modalHTML += `
+                    <div class="alert-detail-section ${sectionClass}">
+                        <h5>${alert.icon} ${alert.title} <span style="font-size: 0.9rem; opacity: 0.7;">(${alert.count} ${alert.count === 1 ? 'producto' : 'productos'})</span></h5>
+                        <p style="margin-bottom: ${alert.details.length > 0 ? '15px' : '0'};">${alert.message}</p>
+                        
+                        ${alert.details.length > 0 ? `
+                            <table class="alert-detail-table table table-dark table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Producto</th>
+                                        <th>Talla</th>
+                                        <th>Stock</th>
+                                        <th>Precio</th>
+                                        <th>Valor Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${alert.details.map(p => `
+                                        <tr>
+                                            <td><strong>${p.id}</strong></td>
+                                            <td>${p.nombre}</td>
+                                            <td><span class="badge bg-secondary">${p.talla}</span></td>
+                                            <td><span class="badge ${p.cantidad === 0 ? 'bg-danger' : 'bg-warning'}">${p.cantidad}</span></td>
+                                            <td>$${p.precio.toFixed(2)}</td>
+                                            <td>$${(p.precio * p.cantidad).toFixed(2)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            
+            // Agregar sección de tareas automáticas
+            fetchAndDisplayTasks(modalBody, modalHTML);
+        }
+        
+        // Obtener y mostrar tareas en el modal
+        async function fetchAndDisplayTasks(modalBody, currentHTML) {
+            try {
+                const response = await fetch('http://localhost:3001/api/enterprise/tasks');
+                const result = await response.json();
+                
+                currentHTML += '<h5 class="mb-4 mt-4"><i class="fas fa-tasks me-2"></i>Tareas Automáticas</h5>';
+                
+                if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+                    result.data.forEach(task => {
+                        const statusIcon = task.status === 'running' ? '▶️' : 
+                                         task.status === 'completed' ? '✅' : '⏰';
+                        const statusBadge = task.status === 'running' ? 'bg-success' : 
+                                          task.status === 'completed' ? 'bg-info' : 'bg-secondary';
+                        
+                        currentHTML += `
+                            <div class="task-detail-item">
+                                <div>
+                                    <h6 class="mb-1">${statusIcon} ${task.name}</h6>
+                                    <small class="text-muted">
+                                        Horario: ${task.schedule} | 
+                                        Última ejecución: ${task.lastRun ? new Date(task.lastRun).toLocaleString('es-ES') : 'Nunca'}
+                                    </small>
+                                </div>
+                                <span class="badge ${statusBadge}">${task.status}</span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    currentHTML += '<p class="text-muted text-center">No hay tareas programadas</p>';
+                }
+                
+                modalBody.innerHTML = currentHTML;
+                
+            } catch (error) {
+                console.error('Error loading tasks for modal:', error);
+                modalBody.innerHTML = currentHTML + '<p class="text-warning text-center mt-4">Error al cargar tareas automáticas</p>';
+            }
+        }
+        
+        // Cerrar modal
+        function closeAlertsModal() {
+            const modal = document.getElementById('alertsModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restaurar scroll del body
+        }
+        
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('alertsModal');
+            if (event.target == modal) {
+                closeAlertsModal();
+            }
+        }
+        
+        // Cerrar modal con tecla ESC
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeAlertsModal();
+            }
+        });
 
         // Load inventory chart
         async function loadInventoryChart(productos) {
@@ -1836,15 +1875,263 @@ function renderSizeCatalogSummary(sizeSummaries = [], fileName = '') {
             modal.show();
         }
 
+        // Load automatic tasks from backend (ready for implementation)
+        async function loadAutomaticTasks() {
+            try {
+                const container = document.getElementById('automaticTasks');
+                
+                // Llamar al backend para obtener las tareas
+                const response = await fetch('http://localhost:3001/api/enterprise/tasks');
+                const result = await response.json();
+                
+                if (result.success && Array.isArray(result.data)) {
+                    const tasks = result.data;
+                    
+                    if (tasks.length === 0) {
+                        container.innerHTML = `
+                            <div class="text-center text-muted py-3">
+                                <p class="mb-0">No hay tareas programadas</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    container.innerHTML = tasks.map(task => {
+                        const statusClass = task.status === 'running' ? 'running' : 
+                                          task.status === 'completed' ? 'completed' : 'scheduled';
+                        const statusIcon = task.status === 'running' ? '▶️' : 
+                                         task.status === 'completed' ? '✅' : '⏰';
+                        
+                        return `
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2" style="background: rgba(255,255,255,0.05); border-radius: 8px;">
+                                <span>${statusIcon} ${task.name}</span>
+                                <span class="task-status ${statusClass}">${task.schedule}</span>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = `
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-cog fa-spin fa-2x mb-2"></i>
+                            <p class="mb-0">Esperando configuración del backend...</p>
+                            <small>Las tareas automáticas se mostrarán cuando el servicio esté disponible</small>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading automatic tasks:', error);
+                const container = document.getElementById('automaticTasks');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-exclamation-triangle text-warning mb-2"></i>
+                            <p class="mb-0">Error al cargar tareas</p>
+                            <small>${error.message}</small>
+                        </div>
+                    `;
+                }
+            }
+        }
+
         // Auto refresh dashboard every 5 minutes
         function setupAutoRefresh() {
             setInterval(() => {
                 loadDashboardMetrics();
                 loadOpportunities();
                 loadStagnantProducts();
+                loadAutomaticTasks(); // Refresh tasks too
             }, 300000); // 5 minutes
         }
     </script>
+
+    <!-- Modal de Detalles de Alertas -->
+    <div id="alertsModal" class="alerts-modal">
+        <div class="alerts-modal-content">
+            <div class="alerts-modal-header">
+                <h4><i class="fas fa-bell me-2"></i>Detalles de Alertas y Tareas</h4>
+                <button class="btn-close-modal" onclick="closeAlertsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="alerts-modal-body" id="alertsModalBody">
+                <div class="text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-3x text-muted"></i>
+                    <p class="text-muted mt-3">Cargando detalles...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Modal de Alertas */
+        .alerts-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .alerts-modal-content {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            margin: 2% auto;
+            padding: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow: hidden;
+            animation: slideDown 0.3s ease;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .alerts-modal-header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .alerts-modal-header h4 {
+            margin: 0;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .btn-close-modal {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #EF4444;
+            color: #EF4444;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-close-modal:hover {
+            background: #EF4444;
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .alerts-modal-body {
+            padding: 30px;
+            max-height: calc(90vh - 100px);
+            overflow-y: auto;
+        }
+
+        .alert-detail-section {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .alert-detail-section h5 {
+            margin-bottom: 15px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-detail-section.critical {
+            border-left: 4px solid var(--danger-color);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .alert-detail-section.warning {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .alert-detail-section.info {
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .alert-detail-table {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .alert-detail-table th {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .alert-detail-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .alert-detail-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .task-detail-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-detail-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Scrollbar personalizado */
+        .alerts-modal-body::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .alerts-modal-body::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .alerts-modal-body::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+
+        .alerts-modal-body::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+    </style>
+
 </body>
 </html>
 
