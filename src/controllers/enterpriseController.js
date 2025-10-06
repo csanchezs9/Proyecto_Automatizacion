@@ -200,34 +200,45 @@ class EnterpriseController {
   static async setupAutomaticAlerts(req, res) {
     try {
       const { alertTypes = ['stock_bajo', 'productos_estancados', 'oportunidades_precio'] } = req.body;
-      
+
       const alerts = [];
-      
+      const summaryByType = {};
+
       for (const alertType of alertTypes) {
         switch (alertType) {
           case 'stock_bajo':
             const lowStockAlerts = await this.createLowStockAlerts();
             alerts.push(...lowStockAlerts);
+            summaryByType.stock_bajo = (summaryByType.stock_bajo || 0) + lowStockAlerts.length;
             break;
-            
+
           case 'productos_estancados':
             const stagnantAlerts = await this.createStagnantProductAlerts();
             alerts.push(...stagnantAlerts);
+            summaryByType.productos_estancados = (summaryByType.productos_estancados || 0) + stagnantAlerts.length;
             break;
-            
+
           case 'oportunidades_precio':
             const priceOpportunityAlerts = await this.createPriceOpportunityAlerts();
             alerts.push(...priceOpportunityAlerts);
+            summaryByType.oportunidades_precio = (summaryByType.oportunidades_precio || 0) + priceOpportunityAlerts.length;
             break;
         }
       }
+
+      await this.logAutomaticActivity('alert_setup', {
+        alertTypes,
+        alertsCreated: alerts.length,
+        summaryByType
+      });
 
       res.json({
         success: true,
         message: 'Alertas automáticas configuradas',
         data: {
           alertsCreated: alerts.length,
-          alerts: alerts
+          alerts: alerts,
+          summaryByType
         }
       });
 
@@ -548,6 +559,123 @@ class EnterpriseController {
 
     } catch (error) {
       console.error('❌ Error creando alertas:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Crear alertas de productos estancados
+   */
+  static async createStagnantProductAlerts() {
+    try {
+      const stagnantProducts = await this.findStagnantProducts();
+      if (!Array.isArray(stagnantProducts) || stagnantProducts.length === 0) {
+        return [];
+      }
+
+      return stagnantProducts.slice(0, 10).map(product => {
+        const stock = typeof product.stock === 'number'
+          ? product.stock
+          : typeof product.cantidad === 'number'
+            ? product.cantidad
+            : null;
+
+        const prioridad = stock !== null && stock < 5 ? 'alta' : 'media';
+
+        const baseMessage = product.nombre
+          ? `Producto ${product.nombre} presenta baja rotación.`
+          : 'Producto con baja rotación identificado.';
+
+        const stockMessage = stock !== null ? ` Stock actual: ${stock}.` : '';
+
+        return {
+          id: Date.now() + Math.random(),
+          tipo_alerta: 'productos_estancados',
+          producto_id: product.id,
+          mensaje: `${baseMessage}${stockMessage}`.trim(),
+          nivel_prioridad: prioridad,
+          fecha_creacion: new Date().toISOString(),
+          product
+        };
+      });
+
+    } catch (error) {
+      console.error('❌ Error creando alertas de productos estancados:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Crear alertas de oportunidades de precio
+   */
+  static async createPriceOpportunityAlerts() {
+    try {
+      const priceStatsQuery = `
+        SELECT 
+          AVG(precio) as precio_promedio
+        FROM productos 
+        WHERE precio > 0
+      `;
+
+      const priceStatsResult = await pool.query(priceStatsQuery);
+      const avgPrice = parseFloat(priceStatsResult.rows?.[0]?.precio_promedio || 0);
+
+      if (!avgPrice || Number.isNaN(avgPrice)) {
+        return [];
+      }
+
+      const minThreshold = avgPrice * 0.6; // 40% por debajo del promedio
+      const maxThreshold = avgPrice * 1.4; // 40% por encima del promedio
+
+      const opportunityQuery = `
+        SELECT * FROM productos 
+        WHERE precio > 0 AND (precio < $1 OR precio > $2)
+        ORDER BY precio ASC
+        LIMIT 20
+      `;
+
+      const opportunityResult = await pool.query(opportunityQuery, [minThreshold, maxThreshold]);
+
+      if (!opportunityResult.rows.length) {
+        return [];
+      }
+
+      return opportunityResult.rows.slice(0, 10).map(product => {
+        const price = parseFloat(product.precio) || 0;
+        const deviation = avgPrice ? price / avgPrice : 1;
+        const isHigh = deviation > 1;
+        const variacionPorcentaje = (deviation - 1) * 100;
+        const variacionTexto = `${variacionPorcentaje >= 0 ? '+' : ''}${variacionPorcentaje.toFixed(1)}%`;
+
+        let prioridad = 'media';
+        if (Math.abs(deviation - 1) >= 0.4) {
+          prioridad = 'alta';
+        }
+
+        const stock = typeof product.stock === 'number'
+          ? product.stock
+          : typeof product.cantidad === 'number'
+            ? product.cantidad
+            : null;
+
+        const directionText = isHigh ? 'alto' : 'bajo';
+
+        const stockText = stock !== null ? ` Stock disponible: ${stock}.` : '';
+
+        return {
+          id: Date.now() + Math.random(),
+          tipo_alerta: 'oportunidades_precio',
+          producto_id: product.id,
+          mensaje: `Precio ${directionText} detectado para ${product.nombre || 'producto'}. Actual: $${price.toFixed(2)} vs promedio $${avgPrice.toFixed(2)} (${variacionTexto}).${stockText}`.trim(),
+          nivel_prioridad: prioridad,
+          fecha_creacion: new Date().toISOString(),
+          product,
+          promedioReferencia: avgPrice
+        };
+      });
+
+    } catch (error) {
+      console.error('❌ Error creando alertas de oportunidades de precio:', error);
       return [];
     }
   }

@@ -369,10 +369,10 @@
                     <div class="card-body text-center">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <div class="metric-value" id="inventoryValue">€0</div>
+                                <div class="metric-value" id="inventoryValue">$0</div>
                                 <div class="metric-label">Valor Inventario</div>
                             </div>
-                            <i class="fas fa-euro-sign metric-icon"></i>
+                            <i class="fas fa-dollar-sign metric-icon"></i>
                         </div>
                     </div>
                 </div>
@@ -443,24 +443,18 @@
 
         <!-- Filters Section -->
         <div class="filter-section">
-            <h6><i class="fas fa-filter me-2"></i>Filtros Avanzados para Catálogos</h6>
+            <h6><i class="fas fa-filter me-2"></i>Filtros Avanzados para Cat&aacute;logos</h6>
             <div class="row">
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <label class="form-label">Talla</label>
                     <select class="form-select" id="filterTalla">
                         <option value="">Todas las tallas</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">Categoría</label>
+                <div class="col-md-3">
+                    <label class="form-label">Categor&iacute;a</label>
                     <select class="form-select" id="filterCategoria">
-                        <option value="">Todas las categorías</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Temporada</label>
-                    <select class="form-select" id="filterTemporada">
-                        <option value="">Todas las temporadas</option>
+                        <option value="">Todas las categor&iacute;as</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -477,6 +471,15 @@
                         <i class="fas fa-magic me-2"></i>Generar
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-list me-2"></i>Resultados de Cat&aacute;logos</h6>
+            </div>
+            <div class="card-body" id="catalogResults">
+                <p class="text-muted mb-0">Usa los filtros para generar un listado de productos.</p>
             </div>
         </div>
 
@@ -605,6 +608,14 @@
     <script>
         let inventoryChart = null;
 
+        let cachedProducts = [];
+        let latestGeneratedAlerts = null;
+
+        const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+        const API_HOST = isLocalhost ? 'http://localhost:3001' : window.location.origin;
+        const PRODUCTS_API_URL = `${API_HOST}/api/products`;
+        const ENTERPRISE_API_URL = `${API_HOST}/api/enterprise`;
+
         // Go back to main system
         function goBack() {
             // Intentar volver a la página anterior
@@ -625,160 +636,762 @@
             setupAutoRefresh();
         });
 
-        // Load dashboard metrics
-        async function loadDashboardMetrics() {
+        // Data helpers
+
+        async function fetchProductsData(forceRefresh = false) {
+
+            if (!forceRefresh && Array.isArray(cachedProducts) && cachedProducts.length) {
+
+                return cachedProducts;
+
+            }
+
+
+
             try {
-                // Cargar datos reales desde el API
-                const response = await fetch('http://localhost:3001/api/products');
-                
+
+                const response = await fetch(PRODUCTS_API_URL);
+
+
+
                 if (!response.ok) {
+
                     throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
-                }
-                
-                const result = await response.json();
-                const productos = result.data;
-                
-                if (Array.isArray(productos)) {
-                    // Calcular métricas reales
-                    const totalProductos = productos.length;
-                    const productosStockBajo = productos.filter(p => p.cantidad < 5).length;
-                    
-                    // Calcular valor total del inventario
-                    const valorInventario = productos.reduce((total, producto) => {
-                        const precio = parseFloat(producto.precio) || 0;
-                        const cantidad = parseInt(producto.cantidad) || 0;
-                        return total + (precio * cantidad);
-                    }, 0);
-                    
-                    // Actualizar KPI cards
-                    document.getElementById('totalProducts').textContent = totalProductos;
-                    document.getElementById('inventoryValue').textContent = `€${valorInventario.toLocaleString()}`;
-                    document.getElementById('lowStockItems').textContent = productosStockBajo;
-                    document.getElementById('unreadAlerts').textContent = productosStockBajo;
-                    
-                    // Update last update time
-                    document.getElementById('lastUpdate').textContent = 
-                        `Última actualización: ${new Date().toLocaleTimeString()}`;
-                    
-                    // Load inventory chart con datos reales
-                    loadInventoryChart(productos);
+
                 }
 
-                // También cargar datos simulados para las funciones empresariales
-                loadEnterpriseAlerts(productos);
+
+
+                const result = await response.json();
+
+                const productos = Array.isArray(result.data) ? result.data : [];
+
+
+
+                cachedProducts = productos;
+
+                return productos;
+
             } catch (error) {
-                console.error('Error cargando métricas del dashboard:', error);
-                // Mostrar valores por defecto si hay error
-                document.getElementById('totalProducts').textContent = '0';
-                document.getElementById('inventoryValue').textContent = '€0';
-                document.getElementById('lowStockItems').textContent = '0';
-                document.getElementById('unreadAlerts').textContent = '0';
+
+                cachedProducts = [];
+
+                throw error;
+
             }
+
         }
+
+
+
+        // Load dashboard metrics
+
+        async function loadDashboardMetrics() {
+
+            try {
+
+                const productos = await fetchProductsData(true);
+
+
+
+                const totalProductos = Array.isArray(productos) ? productos.length : 0;
+
+                const productosStockBajo = Array.isArray(productos)
+
+                    ? productos.filter(p => (parseInt(p.cantidad) || 0) < 5).length
+
+                    : 0;
+
+                const valorInventario = Array.isArray(productos)
+
+                    ? productos.reduce((total, producto) => {
+
+                        const precio = parseFloat(producto.precio) || 0;
+
+                        const cantidad = parseInt(producto.cantidad) || 0;
+
+                        return total + (precio * cantidad);
+
+                    }, 0)
+
+                    : 0;
+
+
+
+                document.getElementById('totalProducts').textContent = totalProductos;
+
+                document.getElementById('inventoryValue').textContent = `$${valorInventario.toLocaleString()}`;
+                document.getElementById('lowStockItems').textContent = productosStockBajo;
+
+                let unreadAlertsCount = productosStockBajo;
+
+                if (Array.isArray(latestGeneratedAlerts)) {
+                    unreadAlertsCount = latestGeneratedAlerts.length;
+                }
+
+                document.getElementById('unreadAlerts').textContent = unreadAlertsCount;
+
+
+
+                if (Array.isArray(productos) && productos.length) {
+
+                    document.getElementById('lastUpdate').textContent =
+
+                        `Ultima actualizacion: ${new Date().toLocaleTimeString()}`;
+
+                    loadInventoryChart(productos);
+
+                } else {
+
+                    document.getElementById('lastUpdate').textContent = 'Ultima actualizacion: sin datos';
+
+                    loadInventoryChart([]);
+
+                }
+
+
+
+                loadEnterpriseAlerts(Array.isArray(productos) ? productos : []);
+
+            } catch (error) {
+
+                console.error('Error cargando metricas del dashboard:', error);
+
+                document.getElementById('totalProducts').textContent = '0';
+
+                document.getElementById('inventoryValue').textContent = '$0';
+                document.getElementById('lowStockItems').textContent = '0';
+
+                document.getElementById('unreadAlerts').textContent = '0';
+
+                document.getElementById('lastUpdate').textContent = 'Ultima actualizacion: sin datos';
+
+                loadEnterpriseAlerts([]);
+
+            }
+
+        }
+
+
 
         // Load filter options
+
         async function loadFilterOptions() {
+
             try {
-                const response = await fetch('http://localhost:3001/api/products');
-                const result = await response.json();
-                
-                if (result.success && Array.isArray(result.data)) {
-                    const productos = result.data;
-                    
-                    // Extraer tallas únicas
-                    const tallas = [...new Set(productos.map(p => p.talla).filter(Boolean))];
-                    populateSelect('filterTalla', tallas);
-                    
-                    // Generar categorías simuladas basadas en nombres
-                    const categorias = ['Camisetas', 'Pantalones', 'Calzado', 'Abrigos', 'Accesorios'];
-                    populateSelect('filterCategoria', categorias);
-                    
-                    // Temporadas simuladas
-                    const temporadas = ['Primavera', 'Verano', 'Otoño', 'Invierno'];
-                    populateSelect('filterTemporada', temporadas);
-                }
+
+                const productos = await fetchProductsData();
+
+
+
+                const tallas = [...new Set((productos || []).map(p => p.talla).filter(Boolean))];
+
+                populateSelect('filterTalla', tallas);
+
+
+
+                const categorias = deriveCategories(productos);
+
+                populateSelect('filterCategoria', categorias);
+
             } catch (error) {
+
                 console.error('Error loading filter options:', error);
+
             }
+
         }
+
+
 
         // Populate select dropdown
-        function populateSelect(selectId, options) {
+
+        function populateSelect(selectId, options = []) {
+
             const select = document.getElementById(selectId);
-            options.forEach(option => {
+
+            if (!select) return;
+
+
+
+            const currentValue = select.value;
+
+            const optionList = Array.isArray(options) ? options.filter(Boolean) : [];
+
+
+
+            while (select.options.length > 1) {
+
+                select.remove(1);
+
+            }
+
+
+
+            optionList.forEach(option => {
+
                 const optionElement = document.createElement('option');
+
                 optionElement.value = option;
+
                 optionElement.textContent = option;
+
                 select.appendChild(optionElement);
+
             });
+
+
+
+            if (optionList.includes(currentValue)) {
+
+                select.value = currentValue;
+
+            } else {
+
+                select.value = '';
+
+            }
+
         }
 
+
+
+        function deriveCategories(productos = []) {
+
+            const categorySet = new Set();
+
+            let includeOtros = false;
+
+
+
+            (productos || []).forEach(producto => {
+
+                const category = guessCategory(producto?.nombre, producto?.descripcion);
+
+                if (category === 'Otros') {
+
+                    includeOtros = true;
+
+                } else if (category) {
+
+                    categorySet.add(category);
+
+                }
+
+            });
+
+
+
+            const categorias = Array.from(categorySet).sort();
+
+
+
+            if (includeOtros || categorias.length === 0) {
+
+                categorias.push('Otros');
+
+            }
+
+
+
+            return categorias;
+
+        }
+
+
+
+        function guessCategory(nombre = '', descripcion = '') {
+
+            const haystack = `${nombre || ''} ${descripcion || ''}`.toLowerCase();
+
+
+
+            const patterns = [
+
+                { match: /(camis|playera|blusa|t-shirt)/, value: 'Camisetas' },
+
+                { match: /(pantal|jean|short)/, value: 'Pantalones' },
+
+                { match: /(zapato|tenis|bota|sandalia|calzado)/, value: 'Calzado' },
+
+                { match: /(abrigo|chaqueta|chamarra|saco|sueter|sweater)/, value: 'Abrigos' },
+
+                { match: /(accesorio|cintur|gorra|bolso|cartera|bufanda|gorro|collar|pulsera)/, value: 'Accesorios' }
+
+            ];
+
+
+
+            for (const pattern of patterns) {
+
+                if (pattern.match.test(haystack)) {
+
+                    return pattern.value;
+
+                }
+
+            }
+
+
+
+            return haystack.trim() ? 'Otros' : '';
+
+        }
+
+
+
+
+function groupProductsBySize(productos = []) {
+    return productos.reduce((acc, producto) => {
+        const talla = (producto.talla && String(producto.talla).trim()) || 'Sin talla';
+        if (!acc[talla]) {
+            acc[talla] = [];
+        }
+        acc[talla].push(producto);
+        return acc;
+    }, {});
+}
+
+function sanitizeSheetName(name) {
+    return (name || 'Catalogo')
+        .replace(/[\/?*\[\]:]/g, '')
+        .substring(0, 31) || 'Catalogo';
+}
+
+function ensureXlsxLibrary() {
+    if (window.XLSX) {
+        return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+        const existing = document.querySelector('script[data-origin="xlsx-cdn"]');
+        if (existing) {
+            if (existing.dataset.loaded === 'true') {
+                resolve();
+                return;
+            }
+            existing.addEventListener('load', () => resolve(), { once: true });
+            existing.addEventListener('error', () => reject(new Error('No se pudo cargar la libreria XLSX')), { once: true });
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        script.dataset.origin = 'xlsx-cdn';
+        script.dataset.loaded = 'false';
+        script.onload = () => {
+            script.dataset.loaded = 'true';
+            resolve();
+        };
+        script.onerror = () => reject(new Error('No se pudo cargar la libreria XLSX'));
+        document.head.appendChild(script);
+    });
+}
+
         // Generate automatic catalogs
+        
         async function generateAutomaticCatalogs() {
-            showLoading('Generando catálogos automáticos por talla...');
-            
+            showLoading('Generando catalogos por talla...');
+
             try {
-                // Simular generación de catálogos
-                setTimeout(() => {
-                    hideLoading();
-                    showSuccessMessage(`
-                        <h6>¡Catálogos generados exitosamente!</h6>
-                        <p><strong>Funcionalidad en desarrollo:</strong> Esta función creará catálogos automáticos por talla</p>
-                        <p><strong>Características planeadas:</strong></p>
-                        <ul>
-                            <li>Generación automática por tallas (XS, S, M, L, XL, XXL)</li>
-                            <li>Exportación a PDF con imágenes</li>
-                            <li>Subida automática a Google Drive</li>
-                            <li>Notificaciones por email</li>
-                            <li>Programación de generación automática</li>
-                        </ul>
-                        <p><em>Conectando con API de productos real...</em></p>
-                    `);
-                }, 2000);
-            } catch (error) {
+                await ensureXlsxLibrary();
+
+                const response = await fetch(PRODUCTS_API_URL);
+                if (!response.ok) {
+                    throw new Error('No se pudo obtener la informacion de productos');
+                }
+
+                const payload = await response.json();
+                const productos = Array.isArray(payload && payload.data) ? payload.data : [];
+
+                if (!Array.isArray(productos) || productos.length === 0) {
+                    throw new Error('No hay productos disponibles para generar catalogos');
+                }
+
+                const grouped = groupProductsBySize(productos);
+                const groupedEntries = Object.entries(grouped).sort((a, b) => a[0].localeCompare(b[0], 'es', { sensitivity: 'base' }));
+
+                const sizeSummaries = groupedEntries.map(([size, list]) => {
+                    const totalStock = list.reduce((acc, producto) => acc + (parseInt(producto.cantidad, 10) || 0), 0);
+                    const totalValue = list.reduce((acc, producto) => {
+                        const price = parseFloat(producto.precio) || 0;
+                        const qty = parseInt(producto.cantidad, 10) || 0;
+                        return acc + (price * qty);
+                    }, 0);
+                    const averagePrice = list.length
+                        ? list.reduce((acc, producto) => acc + (parseFloat(producto.precio) || 0), 0) / list.length
+                        : 0;
+
+                    return {
+                        size,
+                        productCount: list.length,
+                        totalStock,
+                        totalValue,
+                        averagePrice: Number(averagePrice.toFixed(2))
+                    };
+                });
+
+                const totals = sizeSummaries.reduce((acc, item) => {
+                    acc.productCount += item.productCount;
+                    acc.totalStock += item.totalStock;
+                    acc.totalValue += item.totalValue;
+                    return acc;
+                }, { productCount: 0, totalStock: 0, totalValue: 0 });
+
+                const totalsAveragePrice = totals.productCount
+                    ? sizeSummaries.reduce((acc, item) => acc + (item.averagePrice * item.productCount), 0) / totals.productCount
+                    : 0;
+
+                const workbook = XLSX.utils.book_new();
+                workbook.Props = {
+                    Title: 'Catalogo por talla',
+                    Subject: 'Catalogos automatizados por talla',
+                    Author: 'Dashboard Empresarial',
+                    CreatedDate: new Date()
+                };
+
+                const summarySheetData = sizeSummaries.map(item => ({
+                    Talla: item.size,
+                    Productos: item.productCount,
+                    Stock: item.totalStock,
+                    ValorInventario: Number(item.totalValue.toFixed(2)),
+                    PrecioPromedio: Number(item.averagePrice.toFixed(2))
+                }));
+
+                summarySheetData.push({
+                    Talla: 'TOTAL',
+                    Productos: totals.productCount,
+                    Stock: totals.totalStock,
+                    ValorInventario: Number(totals.totalValue.toFixed(2)),
+                    PrecioPromedio: Number(totalsAveragePrice.toFixed(2))
+                });
+
+                const summarySheet = XLSX.utils.json_to_sheet(summarySheetData);
+                XLSX.utils.book_append_sheet(workbook, summarySheet, 'Resumen');
+
+                groupedEntries.forEach(([size, list]) => {
+                    const sheetData = list.map((producto, index) => {
+                        const price = parseFloat(producto.precio) || 0;
+                        const qty = parseInt(producto.cantidad, 10) || 0;
+                        const total = Number((price * qty).toFixed(2));
+                        const createdAt = producto.creado_en
+                            ? new Date(producto.creado_en).toLocaleDateString('es-ES')
+                            : '';
+
+                        return {
+                            '#': index + 1,
+                            ID: producto.id || '',
+                            Nombre: producto.nombre || '',
+                            Descripcion: (producto.descripcion || '').replace(/\s+/g, ' ').trim(),
+                            Categoria: guessCategory(producto.nombre, producto.descripcion) || '',
+                            Talla: producto.talla || 'Sin talla',
+                            Precio: Number(price.toFixed(2)),
+                            Cantidad: qty,
+                            ValorInventario: total,
+                            Imagen: producto.imagen_url || '',
+                            CreadoEn: createdAt
+                        };
+                    });
+
+                    const worksheet = XLSX.utils.json_to_sheet(sheetData);
+                    XLSX.utils.book_append_sheet(
+                        workbook,
+                        worksheet,
+                        sanitizeSheetName(`Talla ${size}`)
+                    );
+                });
+
+                const fileName = `catalogo_tallas_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                const workbookBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([workbookBuffer], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                });
+
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+
+                renderSizeCatalogSummary(sizeSummaries, fileName);
+
                 hideLoading();
-                alert('Error generando catálogos: ' + error.message);
+
+                const message = `
+                    <h6>Catalogos por talla generados</h6>
+                    <p>Archivo creado: <strong>${fileName}</strong></p>
+                    <p>Total de tallas: <strong>${sizeSummaries.length}</strong></p>
+                    <p>Total de productos: <strong>${totals.productCount}</strong></p>
+                `;
+                showSuccessMessage(message);
+            } catch (error) {
+                console.error('Error generando catalogos por talla:', error);
+                hideLoading();
+                alert('Error generando catalogos: ' + error.message);
             }
         }
+
 
         // Generate filtered catalogs
         async function generateFilteredCatalogs() {
-            const filters = {
+            const rawFilters = {
                 talla: document.getElementById('filterTalla').value,
                 categoria: document.getElementById('filterCategoria').value,
-                temporada: document.getElementById('filterTemporada').value,
-                precio_min: parseFloat(document.getElementById('filterPrecioMin').value) || undefined,
-                precio_max: parseFloat(document.getElementById('filterPrecioMax').value) || undefined
+                precio_min: document.getElementById('filterPrecioMin').value,
+                precio_max: document.getElementById('filterPrecioMax').value
             };
 
-            // Remove empty filters
-            Object.keys(filters).forEach(key => {
-                if (!filters[key]) delete filters[key];
-            });
+            const filters = Object.entries(rawFilters).reduce((acc, [key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    if (key.startsWith('precio_')) {
+                        const numericValue = parseFloat(value);
+                        if (!Number.isNaN(numericValue)) {
+                            acc[key] = numericValue;
+                        }
+                    } else {
+                        acc[key] = value;
+                    }
+                }
+                return acc;
+            }, {});
 
             showLoading('Generando catálogos con filtros específicos...');
 
             try {
-                setTimeout(() => {
-                    hideLoading();
-                    showSuccessMessage(`
-                        <h6>¡Catálogos filtrados generados!</h6>
-                        <p><strong>Filtros aplicados:</strong></p>
-                        <pre>${JSON.stringify(filters, null, 2)}</pre>
-                        <p><strong>Funcionalidad en desarrollo:</strong></p>
-                        <ul>
-                            <li>Filtrado avanzado de productos</li>
-                            <li>Catálogos personalizados por criterios</li>
-                            <li>Exportación en múltiples formatos</li>
-                            <li>Automatización de horarios</li>
-                        </ul>
-                        <p><em>Esta función se conectará con la base de datos real de productos.</em></p>
-                    `);
-                }, 1500);
+                const productos = await fetchProductsData();
+                const filteredProducts = applyFiltersToProducts(productos, filters);
+
+                renderCatalogResults(filteredProducts, filters);
+
+                hideLoading();
+
+                const totalValue = filteredProducts.reduce((total, producto) => {
+                    const precio = parseFloat(producto.precio) || 0;
+                    const cantidad = parseInt(producto.cantidad) || 0;
+                    return total + (precio * cantidad);
+                }, 0);
+
+                const message = `
+                    <h6>Resultados del filtrado</h6>
+                    <p>Productos encontrados: <strong>${filteredProducts.length}</strong></p>
+                    <p>Valor estimado del inventario filtrado: <strong>$${totalValue.toLocaleString()}</strong></p>
+                    ${formatFiltersSummary(filters)}
+                `;
+
+                showSuccessMessage(message);
             } catch (error) {
+                console.error('Error generando catálogos filtrados:', error);
                 hideLoading();
                 alert('Error generando catálogos filtrados: ' + error.message);
             }
+        }
+
+        function applyFiltersToProducts(productos = [], filters = {}) {
+            if (!Array.isArray(productos)) {
+                return [];
+            }
+
+            return productos.filter(producto => {
+                const talla = (producto.talla || '').toString().toLowerCase();
+                const categoria = guessCategory(producto.nombre, producto.descripcion).toLowerCase();
+                const precio = parseFloat(producto.precio) || 0;
+
+                if (filters.talla && talla !== filters.talla.toLowerCase()) {
+                    return false;
+                }
+
+                if (filters.categoria && categoria !== filters.categoria.toLowerCase()) {
+                    return false;
+                }
+
+                if (filters.precio_min !== undefined && precio < filters.precio_min) {
+                    return false;
+                }
+
+                if (filters.precio_max !== undefined && precio > filters.precio_max) {
+                    return false;
+                }
+
+                return true;
+            }).sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
+        }
+
+
+function renderSizeCatalogSummary(sizeSummaries = [], fileName = '') {
+    const container = document.getElementById('catalogResults');
+    if (!container) {
+        return;
+    }
+
+    if (!Array.isArray(sizeSummaries) || sizeSummaries.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted py-3">No se encontraron productos para generar catalogos.</div>';
+        return;
+    }
+
+    const numberFormatter = new Intl.NumberFormat('es-MX');
+    const currencyFormatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+
+    const totalProducts = sizeSummaries.reduce((acc, item) => acc + item.productCount, 0);
+    const totalStock = sizeSummaries.reduce((acc, item) => acc + item.totalStock, 0);
+    const totalValue = sizeSummaries.reduce((acc, item) => acc + item.totalValue, 0);
+    const totalAveragePrice = totalProducts
+        ? sizeSummaries.reduce((acc, item) => acc + (item.averagePrice * item.productCount), 0) / totalProducts
+        : 0;
+
+    const rows = sizeSummaries.map(item => `
+        <tr>
+            <td>${item.size}</td>
+            <td>${numberFormatter.format(item.productCount)}</td>
+            <td>${numberFormatter.format(item.totalStock)}</td>
+            <td>${currencyFormatter.format(item.totalValue)}</td>
+            <td>${currencyFormatter.format(item.averagePrice)}</td>
+        </tr>
+    `).join('');
+
+    container.innerHTML = `
+        <div class="table-responsive">
+            <table class="table table-dark table-striped align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Talla</th>
+                        <th>Productos</th>
+                        <th>Stock total</th>
+                        <th>Valor inventario</th>
+                        <th>Precio promedio</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+                <tfoot>
+                    <tr>
+                        <th>Total</th>
+                        <th>${numberFormatter.format(totalProducts)}</th>
+                        <th>${numberFormatter.format(totalStock)}</th>
+                        <th>${currencyFormatter.format(totalValue)}</th>
+                        <th>${currencyFormatter.format(totalAveragePrice)}</th>
+                    </tr>
+                </tfoot>
+            </table>
+            <p class="text-muted small mt-3 mb-0">
+                Archivo generado: <span class="text-info">${fileName}</span>
+            </p>
+        </div>
+    `;
+}
+
+
+
+        function renderCatalogResults(productos = [], filters = {}) {
+            const container = document.getElementById('catalogResults');
+            if (!container) {
+                return;
+            }
+
+            if (!Array.isArray(productos) || productos.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted py-3">No se encontraron productos con los filtros seleccionados.</div>';
+                return;
+            }
+
+            const filterBadges = formatFilterBadges(filters);
+
+            const rowsHtml = productos.map(producto => {
+                const precio = parseFloat(producto.precio) || 0;
+                const cantidad = parseInt(producto.cantidad) || 0;
+                const categoria = guessCategory(producto.nombre, producto.descripcion) || 'Sin categoría';
+
+                return `
+                    <tr>
+                        <td>${producto.id || '—'}</td>
+                        <td>
+                            <strong>${producto.nombre || 'Producto sin nombre'}</strong><br>
+                            <small class="text-muted">${categoria}</small>
+                        </td>
+                        <td>${(producto.talla || '—').toString().toUpperCase()}</td>
+                        <td>$${precio.toLocaleString()}</td>
+                        <td>${cantidad}</td>
+                        <td>$${(precio * cantidad).toLocaleString()}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="mb-3">
+                    ${filterBadges}
+                    <small class="text-muted d-block">Productos encontrados: ${productos.length}</small>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-striped table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Producto</th>
+                                <th>Talla</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Valor Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function formatFilterBadges(filters = {}) {
+            const labels = {
+                talla: 'Talla',
+                categoria: 'Categoría',
+                precio_min: 'Precio mín.',
+                precio_max: 'Precio máx.'
+            };
+
+            const badgeClasses = 'badge bg-info text-dark me-2 mb-2';
+
+            return Object.entries(filters)
+                .map(([key, value]) => {
+                    if (value === undefined || value === null || value === '') {
+                        return '';
+                    }
+
+                    const label = labels[key] || key;
+                    const displayValue = key.startsWith('precio_')
+                        ? `$${Number(value).toLocaleString()}`
+                        : value;
+
+                    return `<span class="${badgeClasses}">${label}: ${displayValue}</span>`;
+                })
+                .join('');
+        }
+
+        function formatFiltersSummary(filters = {}) {
+            const entries = Object.entries(filters);
+            if (!entries.length) {
+                return '<p>Sin filtros específicos.</p>';
+            }
+
+            const items = entries.map(([key, value]) => {
+                const labelMap = {
+                    talla: 'Talla',
+                    categoria: 'Categoría',
+                    precio_min: 'Precio mínimo',
+                    precio_max: 'Precio máximo'
+                };
+
+                const label = labelMap[key] || key;
+                const displayValue = key.startsWith('precio_')
+                    ? `$${Number(value).toLocaleString()}`
+                    : value;
+
+                return `<li>${label}: <strong>${displayValue}</strong></li>`;
+            }).join('');
+
+            return `
+                <p><strong>Filtros aplicados:</strong></p>
+                <ul>${items}</ul>
+            `;
         }
 
         // Generate business report
@@ -817,27 +1430,67 @@
         // Setup automatic alerts
         async function setupAutomaticAlerts() {
             showLoading('Configurando alertas automáticas...');
-            
+
             try {
-                setTimeout(() => {
-                    hideLoading();
-                    showSuccessMessage(`
-                        <h6>Alertas Configuradas</h6>
-                        <p><strong>Sistema de alertas en desarrollo:</strong></p>
-                        <ul>
-                            <li>🔔 Alertas de stock bajo (< 5 unidades)</li>
-                            <li>📦 Productos sin rotación (30+ días)</li>
-                            <li>💵 Oportunidades de optimización de precios</li>
-                            <li>📧 Notificaciones por email</li>
-                            <li>📱 Notificaciones push</li>
-                            <li>⏰ Verificación automática cada hora</li>
-                            <li>📊 Dashboard de alertas en tiempo real</li>
-                        </ul>
-                        <p><em>Las alertas se basarán en datos reales de la base de datos.</em></p>
-                    `);
-                }, 1500);
+                const response = await fetch(`${ENTERPRISE_API_URL}/alerts/setup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        alertTypes: ['stock_bajo', 'productos_estancados', 'oportunidades_precio']
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+                }
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.message || 'No se pudieron configurar las alertas');
+                }
+
+                const alerts = Array.isArray(result.data?.alerts) ? result.data.alerts : [];
+                const summaryByType = result.data?.summaryByType || {};
+
+                latestGeneratedAlerts = alerts;
+                renderEnterpriseAlerts(alerts);
+
+                const summaryList = Object.entries(summaryByType)
+                    .filter(([, count]) => typeof count === 'number')
+                    .map(([type, count]) => `<li>${formatAlertTypeLabel(type)}: ${count}</li>`)
+                    .join('');
+
+                const previewHtml = alerts.slice(0, 3).map(alert => {
+                    const productName = alert.product?.nombre || formatAlertTypeLabel(alert.tipo_alerta);
+                    return `
+                        <div class="mb-2">
+                            <strong>${getAlertIcon(alert.tipo_alerta)} ${productName}</strong><br>
+                            <small class="text-muted">${alert.mensaje}</small>
+                        </div>
+                    `;
+                }).join('');
+
+                const summaryHtml = summaryList
+                    ? `<h6 class="mt-3 mb-1">Resumen por tipo</h6><ul class="mb-0">${summaryList}</ul>`
+                    : '<p class="mb-2">No se generaron nuevas alertas.</p>';
+
+                const previewSection = alerts.length
+                    ? `<hr><h6 class="mb-2">Primeras alertas</h6>${previewHtml}`
+                    : '';
+
+                hideLoading();
+                showSuccessMessage(`
+                    <h6>Alertas Configuradas</h6>
+                    <p class="mb-2">${alerts.length ? `Se generaron ${alerts.length} alertas automáticas.` : 'No se generaron alertas nuevas.'}</p>
+                    ${summaryHtml}
+                    ${previewSection}
+                `);
             } catch (error) {
                 hideLoading();
+                console.error('Error configurando alertas:', error);
                 alert('Error configurando alertas: ' + error.message);
             }
         }
@@ -888,21 +1541,21 @@
                         <div class="d-flex justify-content-between align-items-center border-bottom py-2">
                             <div>
                                 <strong>Producto Ejemplo A</strong><br>
-                                <small class="text-muted">Stock: 25 | €29.99</small>
+                                <small class="text-muted">Stock: 25 | $29.99</small>
                             </div>
                             <span class="badge bg-warning">Baja rotación</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center border-bottom py-2">
                             <div>
                                 <strong>Producto Ejemplo B</strong><br>
-                                <small class="text-muted">Stock: 18 | €45.50</small>
+                                <small class="text-muted">Stock: 18 | $45.50</small>
                             </div>
                             <span class="badge bg-warning">Sin ventas</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center border-bottom py-2">
                             <div>
                                 <strong>Producto Ejemplo C</strong><br>
-                                <small class="text-muted">Stock: 12 | €19.99</small>
+                                <small class="text-muted">Stock: 12 | $19.99</small>
                             </div>
                             <span class="badge bg-warning">30+ días</span>
                         </div>
@@ -913,12 +1566,109 @@
             }
         }
 
+        function formatAlertTypeLabel(type = '') {
+            if (!type) {
+                return 'Alerta automatizada';
+            }
+
+            const labels = {
+                stock_bajo: 'Stock bajo',
+                productos_estancados: 'Productos estancados',
+                producto_estancado: 'Producto estancado',
+                oportunidades_precio: 'Oportunidades de precio',
+                oportunidad_precio: 'Oportunidad de precio',
+                atencion_producto: 'Atención de producto'
+            };
+
+            if (labels[type]) {
+                return labels[type];
+            }
+
+            return type
+                .toString()
+                .replace(/_/g, ' ')
+                .replace(/\b\w/g, (char) => char.toUpperCase());
+        }
+
+        function getAlertIcon(type = '') {
+            const icons = {
+                stock_bajo: '⚠️',
+                productos_estancados: '⏳',
+                producto_estancado: '⏳',
+                oportunidades_precio: '💰',
+                oportunidad_precio: '💰',
+                atencion_producto: '🔔'
+            };
+
+            return icons[type] || '🔔';
+        }
+
+        function renderEnterpriseAlerts(alerts = []) {
+            const container = document.getElementById('alertsContainer');
+            const unreadElement = document.getElementById('unreadAlerts');
+
+            if (!container) {
+                return;
+            }
+
+            if (!Array.isArray(alerts) || alerts.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted py-3">No hay alertas pendientes</div>';
+                if (unreadElement) {
+                    unreadElement.textContent = '0';
+                }
+                return;
+            }
+
+            const alertsHTML = alerts.map((alert) => {
+                const priorityClass = alert.nivel_prioridad === 'alta' ? 'high-priority' : '';
+
+                let badgeClass = 'bg-info';
+                if (alert.nivel_prioridad === 'alta') {
+                    badgeClass = 'bg-danger';
+                } else if (alert.nivel_prioridad === 'media') {
+                    badgeClass = 'bg-warning text-dark';
+                }
+
+                let createdAt = new Date();
+                if (alert.fecha_creacion) {
+                    const parsedDate = new Date(alert.fecha_creacion);
+                    if (!Number.isNaN(parsedDate.getTime())) {
+                        createdAt = parsedDate;
+                    }
+                }
+
+                return `
+                    <div class="alert-item ${priorityClass}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>${getAlertIcon(alert.tipo_alerta)} ${alert.product?.nombre || formatAlertTypeLabel(alert.tipo_alerta)}</strong>
+                                <p class="mb-1">${alert.mensaje || 'Alerta automatizada detectada.'}</p>
+                                <small class="text-muted">Generada: ${createdAt.toLocaleString()}</small>
+                            </div>
+                            <span class="badge ${badgeClass} text-uppercase">${(alert.nivel_prioridad || 'media')}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = alertsHTML;
+
+            if (unreadElement) {
+                unreadElement.textContent = alerts.length;
+            }
+        }
+
         // Load enterprise alerts
         async function loadEnterpriseAlerts(productos) {
             try {
+                if (Array.isArray(latestGeneratedAlerts)) {
+                    renderEnterpriseAlerts(latestGeneratedAlerts);
+                    return;
+                }
+
                 const container = document.getElementById('alertsContainer');
                 
-                if (productos && productos.length > 0) {
+                if (Array.isArray(productos) && productos.length > 0) {
                     const stockBajo = productos.filter(p => p.cantidad < 5);
                     const sinStock = productos.filter(p => p.cantidad === 0);
                     
@@ -936,7 +1686,7 @@
                     if (stockBajo.length > 0) {
                         alertsHTML += `
                             <div class="alert-item">
-                                <strong>⚠️ Stock Bajo</strong><br>
+                                <strong>⚠ Stock Bajo</strong><br>
                                 <small>${stockBajo.length} productos con menos de 5 unidades</small>
                             </div>
                         `;
@@ -950,6 +1700,8 @@
                     `;
                     
                     container.innerHTML = alertsHTML || '<div class="text-center text-muted py-3">No hay alertas pendientes</div>';
+                } else if (container) {
+                    container.innerHTML = '<div class="text-center text-muted py-3">No hay alertas pendientes</div>';
                 }
             } catch (error) {
                 console.error('Error loading enterprise alerts:', error);
@@ -961,7 +1713,7 @@
             try {
                 // Si no se pasan productos, cargarlos
                 if (!productos) {
-                    const response = await fetch('http://localhost:3001/api/products');
+                    const response = await fetch(PRODUCTS_API_URL);
                     const result = await response.json();
                     productos = result.data;
                 }
@@ -1003,7 +1755,7 @@
                         data: {
                             labels: tallas,
                             datasets: [{
-                                label: 'Valor Inventario (€)',
+                                label: 'Valor Inventario ($)',
                                 data: valores,
                                 backgroundColor: 'rgba(0, 212, 255, 0.6)',
                                 borderColor: 'rgba(0, 212, 255, 1)',
@@ -1095,3 +1847,5 @@
     </script>
 </body>
 </html>
+
+
