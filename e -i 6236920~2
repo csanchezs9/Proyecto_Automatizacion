@@ -1,0 +1,35 @@
+[33m6236920[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m git guardian valido
+[33m34d94dc[m Merge pull request #4 from csanchezs9/bot
+[33mcb52d71[m mejor interfaz para generacion pdf
+[33m24dffd2[m dahboard funcionando ultimo por mirar dos tablas abajp
+[33m940c53f[m conf alertas ya actualizado
+[33mac92b69[m botom de alertas funcionando
+[33m00632b3[m adelanto de dashboard
+[33m58f8372[m  bot-telegram
+[33m23fcd30[m telegram-bot-funcional
+[33mc8e5df2[m  Fix GitGuardian false positive in .env.example
+[33m3626716[m  Complete codebase update and cleanup
+[33me45f46f[m  Security fix: Remove hardcoded passwords, use environment variables
+[33m7f9db0b[m Diseño de dashboard, pendiente agregar atributos tabla productos
+[33mfcd3b21[m PRECISA , funciona, correccion gestion, queda a implemetar nueva funcionalidad
+[33m7c7520b[m ultima version funcionando
+[33m71705d2[m Merge pull request #2 from csanchezs9/gestion
+[33m60af793[m[33m ([m[1;31morigin/gestion[m[33m)[m mejora de productos de pdf
+[33mac4098d[m FUNCIONA TODO GESTION COMPLETA, falta manejar IDS
+[33md09a453[m Merge pull request #1 from csanchezs9/gestion
+[33m696154a[m Revert "funciona, por el momento no f formatos webp, png etc"
+[33medb7542[m funciona, por el momento no f formatos webp, png etc
+[33m2c585d2[m Agregada rama gestion con aagregar y eliminar producto y imagenes en visualizador
+[33m5dd837d[m funcionando, corrigiendo pdf, tultimando detalles
+[33mffeb731[m ultima version para Yessetk, interfaz cambiada, ids cambiados, falta correccion pdf y ultimar detalles
+[33m0efe28d[m nueva interfaz
+[33m0c2b6aa[m funcionando 100%, falta correccion pdf
+[33m8d28dfa[m correccion fallo yessetk
+[33m0d88ed5[m show img
+[33m62a4005[m Actualización completa del proyecto - servidor con Supabase
+[33m393bb05[m todo img
+[33mc451e90[m Merge remote changes with local changes
+[33m61d0612[m correcion img
+[33mc8d07b5[m Update README.md
+[33m1efac7d[m nueva pestaña obtener productos y mejora html
+[33m29cd684[m first
