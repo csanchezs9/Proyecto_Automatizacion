@@ -740,6 +740,261 @@
         .content-section.active {
             display: block;
         }
+
+        /* PDF Cards Styles */
+        .pdf-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8));
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pdf-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #00d4ff, #0ea5e9);
+        }
+
+        .pdf-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+        }
+
+        .pdf-card-premium {
+            opacity: 0.7;
+        }
+
+        .pdf-card-premium::before {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+
+        .pdf-card-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00d4ff20, #0ea5e920);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .pdf-card-icon i {
+            font-size: 28px;
+            color: #00d4ff;
+        }
+
+        .pdf-card-premium .pdf-card-icon {
+            background: linear-gradient(135deg, #f59e0b20, #d9770620);
+        }
+
+        .pdf-card-premium .pdf-card-icon i {
+            color: #f59e0b;
+        }
+
+        .pdf-card h3 {
+            color: #ffffff;
+            font-size: 1.3rem;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+        }
+
+        .pdf-card p {
+            color: #94a3b8;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .pdf-features {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .pdf-features li {
+            color: #cbd5e1;
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pdf-features li i {
+            color: #10b981;
+            font-size: 14px;
+        }
+
+        .pdf-card-premium .pdf-features li i {
+            color: #f59e0b;
+        }
+
+        .btn-pdf-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #00d4ff, #0ea5e9);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-pdf-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-pdf-secondary {
+            width: 100%;
+            background: linear-gradient(135deg, #64748b, #475569);
+            color: #94a3b8;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: not-allowed;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .pdf-card-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .pdf-history-section {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: rgba(30, 41, 59, 0.3);
+            border: 1px solid #334155;
+            border-radius: 16px;
+        }
+
+        .pdf-history-section h4 {
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pdf-history-section h4 i {
+            color: #00d4ff;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #64748b;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state small {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .pdf-history-item {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .pdf-history-item:hover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .pdf-history-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .pdf-history-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #00d4ff20, #0ea5e920);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00d4ff;
+        }
+
+        .pdf-history-details h5 {
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+        }
+
+        .pdf-history-details small {
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        .pdf-history-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-history-action {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-history-action:hover {
+            background: #00d4ff;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -892,16 +1147,82 @@
             <!-- PDFs Section -->
             <div id="pdfs-section" class="content-section">
                 <div class="content-area">
-                    <div class="section-title">
+                    <div class="section-title" style="margin-bottom: 2rem;">
                         <i class="fas fa-file-pdf"></i>
                         <span>Generación de PDFs</span>
                     </div>
                     
-                    <div class="action-buttons">
-                        <button class="btn" onclick="generatePDF()">
-                            <i class="fas fa-file-pdf"></i>
-                            Generar PDF Básico
-                        </button>
+                    <!-- Cards de opciones de PDF -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                        
+                        <!-- PDF Básico -->
+                        <div class="pdf-card">
+                            <div class="pdf-card-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <h3>Catálogo Básico</h3>
+                            <p>Genera un PDF simple con todos los productos del inventario</p>
+                            <ul class="pdf-features">
+                                <li><i class="fas fa-check"></i> Todos los productos</li>
+                                <li><i class="fas fa-check"></i> Información básica</li>
+                                <li><i class="fas fa-check"></i> Generación rápida</li>
+                            </ul>
+                            <button class="btn-pdf-primary" onclick="generatePDF()">
+                                <i class="fas fa-download"></i>
+                                Generar PDF Básico
+                            </button>
+                        </div>
+
+                        <!-- PDF Avanzado (próximamente) -->
+                        <div class="pdf-card pdf-card-premium">
+                            <div class="pdf-card-badge">Próximamente</div>
+                            <div class="pdf-card-icon">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <h3>Catálogo Premium</h3>
+                            <p>Catálogo profesional con diseño personalizado y filtros avanzados</p>
+                            <ul class="pdf-features">
+                                <li><i class="fas fa-star"></i> Diseño profesional</li>
+                                <li><i class="fas fa-star"></i> Filtros personalizados</li>
+                                <li><i class="fas fa-star"></i> Imágenes de productos</li>
+                            </ul>
+                            <button class="btn-pdf-secondary" disabled>
+                                <i class="fas fa-lock"></i>
+                                Próximamente
+                            </button>
+                        </div>
+
+                        <!-- Reportes (próximamente) -->
+                        <div class="pdf-card pdf-card-premium">
+                            <div class="pdf-card-badge">Próximamente</div>
+                            <div class="pdf-card-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <h3>Reportes Analíticos</h3>
+                            <p>Reportes detallados con gráficos y análisis de inventario</p>
+                            <ul class="pdf-features">
+                                <li><i class="fas fa-star"></i> Gráficos estadísticos</li>
+                                <li><i class="fas fa-star"></i> Análisis de tendencias</li>
+                                <li><i class="fas fa-star"></i> Métricas de negocio</li>
+                            </ul>
+                            <button class="btn-pdf-secondary" disabled>
+                                <i class="fas fa-lock"></i>
+                                Próximamente
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <!-- Historial de PDFs generados -->
+                    <div class="pdf-history-section">
+                        <h4><i class="fas fa-history"></i> PDFs Generados Recientemente</h4>
+                        <div id="pdfHistoryContainer">
+                            <div class="empty-state">
+                                <i class="fas fa-folder-open"></i>
+                                <p>No hay PDFs generados aún</p>
+                                <small>Genera tu primer catálogo para verlo aquí</small>
+                            </div>
+                        </div>
                     </div>
 
                     <div id="pdfs-result" class="result" style="display: none;"></div>
@@ -1158,6 +1479,9 @@
                 .then(data => {
                     hideLoading('pdfs');
                     if (data.success) {
+                        // Agregar al historial
+                        addPDFToHistory(data.data);
+                        
                         // Show success modal
                         document.getElementById('pdfFilename').textContent = data.data.filename;
                         document.getElementById('pdfProductCount').textContent = data.data.totalProducts;
@@ -1176,6 +1500,46 @@
                     hideLoading('pdfs');
                     showResult('pdfs', `Error de conexión: ${error.message}`, true);
                 });
+        }
+
+        // Agregar PDF al historial
+        function addPDFToHistory(pdfData) {
+            const historyContainer = document.getElementById('pdfHistoryContainer');
+            
+            // Remover empty state si existe
+            const emptyState = historyContainer.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            // Crear item de historial
+            const historyItem = document.createElement('div');
+            historyItem.className = 'pdf-history-item';
+            historyItem.innerHTML = `
+                <div class="pdf-history-info">
+                    <div class="pdf-history-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="pdf-history-details">
+                        <h5>${pdfData.filename}</h5>
+                        <small>${pdfData.totalProducts} productos • ${new Date(pdfData.timestamp).toLocaleString('es-ES')}</small>
+                    </div>
+                </div>
+                <div class="pdf-history-actions">
+                    <button class="btn-history-action" onclick="window.open('${API_BASE_URL}${pdfData.downloadUrl}', '_blank')">
+                        <i class="fas fa-download"></i> Descargar
+                    </button>
+                </div>
+            `;
+            
+            // Insertar al inicio
+            historyContainer.insertBefore(historyItem, historyContainer.firstChild);
+            
+            // Limitar a 5 items en el historial
+            const items = historyContainer.querySelectorAll('.pdf-history-item');
+            if (items.length > 5) {
+                items[items.length - 1].remove();
+            }
         }
 
         function closeModal() {
