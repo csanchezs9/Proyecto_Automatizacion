@@ -21,13 +21,13 @@ const router = express.Router();
  *   }
  * }
  */
-router.post('/catalogs/generate', EnterpriseController.generateAutomaticCatalogs);
+router.post('/catalogs/generate', EnterpriseController.generateAutomaticCatalogs.bind(EnterpriseController));
 
 /**
  * @route GET /api/enterprise/reports/business
  * @desc Generar reportes automáticos de análisis empresarial
  */
-router.get('/reports/business', EnterpriseController.generateBusinessReports);
+router.get('/reports/business', EnterpriseController.generateBusinessReports.bind(EnterpriseController));
 
 /**
  * @route POST /api/enterprise/alerts/setup
@@ -36,7 +36,7 @@ router.get('/reports/business', EnterpriseController.generateBusinessReports);
  *   alertTypes: string[] // ['stock_bajo', 'productos_estancados', 'oportunidades_precio']
  * }
  */
-router.post('/alerts/setup', EnterpriseController.setupAutomaticAlerts);
+router.post('/alerts/setup', EnterpriseController.setupAutomaticAlerts.bind(EnterpriseController));
 
 /**
  * @route GET /api/enterprise/analytics/inventory

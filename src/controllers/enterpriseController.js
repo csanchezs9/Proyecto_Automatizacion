@@ -518,44 +518,56 @@ class EnterpriseController {
         FROM information_schema.columns 
         WHERE table_name = 'productos'
       `;
-      
+
       const columnsResult = await pool.query(columnsQuery);
       const columns = columnsResult.rows.map(row => row.column_name);
-      
-      // Consulta adaptativa
+      const stockExpression = "CASE WHEN (stock)::text ~ '^-?\d+(\.\d+)?$' THEN (stock)::numeric ELSE NULL END";
+      const priceExpression = "CASE WHEN (precio)::text ~ '^-?\d+(\.\d+)?$' THEN (precio)::numeric ELSE NULL END";
+
       let query = `SELECT * FROM productos WHERE 1=1`;
-      
+
       if (columns.includes('activo')) {
         query += ` AND COALESCE(activo, true) = true`;
       }
-      
+
       if (columns.includes('stock')) {
-        query += ` AND COALESCE(stock, 0) > 0 AND COALESCE(stock, 0) < 10`;
+        query += ` AND ${stockExpression} > 0 AND ${stockExpression} < 10`;
       } else {
         // Si no hay columna stock, simular alertas con productos de precio bajo
-        query += ` AND precio < 20`;
+        query += ` AND ${priceExpression} < 20`;
       }
-      
+
       const result = await pool.query(query);
       const alerts = [];
 
-      // Crear alertas simples (sin insertar en base de datos por ahora)
       for (const product of result.rows) {
-        const stockValue = product.stock || 'N/A';
-        const mensaje = `Atención requerida para ${product.nombre}. ${stockValue !== 'N/A' ? `Stock: ${stockValue}` : 'Precio bajo: €' + product.precio}`;
-        
+        const stockCandidates = [product.stock, product.cantidad];
+        const rawStock = stockCandidates.find(value => value !== undefined && value !== null && value !== '');
+        const stockValue = rawStock !== undefined && rawStock !== null && rawStock !== '' ? Number(rawStock) : NaN;
+        const stockIsValid = Number.isFinite(stockValue);
+        const rawPrice = product.precio;
+        const priceValue = rawPrice !== undefined && rawPrice !== null && rawPrice !== '' ? Number(rawPrice) : NaN;
+        const priceIsValid = Number.isFinite(priceValue);
+        const productName = product.nombre || 'producto';
+        const detalle = stockIsValid
+          ? `Stock: ${stockValue}`
+          : `Precio bajo: $${priceIsValid ? priceValue.toFixed(2) : rawPrice || 'N/D'}`;
+        const mensaje = `Atención requerida para ${productName}. ${detalle}`;
+
         alerts.push({
           id: Date.now() + Math.random(),
           tipo_alerta: 'atencion_producto',
           producto_id: product.id,
-          mensaje: mensaje,
-          nivel_prioridad: stockValue < 5 || product.precio < 10 ? 'alta' : 'media',
+          mensaje,
+          nivel_prioridad: stockIsValid
+            ? (stockValue < 5 ? 'alta' : 'media')
+            : (priceIsValid && priceValue < 10 ? 'alta' : 'media'),
           fecha_creacion: new Date().toISOString(),
-          product: product
+          product
         });
       }
 
-      return alerts.slice(0, 10); // Limitar a 10 alertas
+      return alerts.slice(0, 10);
 
     } catch (error) {
       console.error('❌ Error creando alertas:', error);
@@ -610,11 +622,12 @@ class EnterpriseController {
    */
   static async createPriceOpportunityAlerts() {
     try {
+      const priceExpression = "CASE WHEN (precio)::text ~ '^-?\d+(\.\d+)?$' THEN (precio)::numeric ELSE NULL END";
       const priceStatsQuery = `
         SELECT 
-          AVG(precio) as precio_promedio
+          AVG(${priceExpression}) as precio_promedio
         FROM productos 
-        WHERE precio > 0
+        WHERE ${priceExpression} > 0
       `;
 
       const priceStatsResult = await pool.query(priceStatsQuery);
@@ -628,9 +641,10 @@ class EnterpriseController {
       const maxThreshold = avgPrice * 1.4; // 40% por encima del promedio
 
       const opportunityQuery = `
-        SELECT * FROM productos 
-        WHERE precio > 0 AND (precio < $1 OR precio > $2)
-        ORDER BY precio ASC
+        SELECT *, ${priceExpression} AS precio_numerico
+        FROM productos 
+        WHERE ${priceExpression} > 0 AND (${priceExpression} < $1 OR ${priceExpression} > $2)
+        ORDER BY ${priceExpression} ASC
         LIMIT 20
       `;
 
@@ -640,9 +654,17 @@ class EnterpriseController {
         return [];
       }
 
-      return opportunityResult.rows.slice(0, 10).map(product => {
-        const price = parseFloat(product.precio) || 0;
-        const deviation = avgPrice ? price / avgPrice : 1;
+      const alerts = [];
+
+      for (const product of opportunityResult.rows) {
+        const priceSource = product.precio_numerico ?? product.precio;
+        const priceValue = priceSource !== undefined && priceSource !== null && priceSource !== '' ? Number(priceSource) : NaN;
+
+        if (!Number.isFinite(priceValue) || priceValue <= 0) {
+          continue;
+        }
+
+        const deviation = avgPrice ? priceValue / avgPrice : 1;
         const isHigh = deviation > 1;
         const variacionPorcentaje = (deviation - 1) * 100;
         const variacionTexto = `${variacionPorcentaje >= 0 ? '+' : ''}${variacionPorcentaje.toFixed(1)}%`;
@@ -652,27 +674,25 @@ class EnterpriseController {
           prioridad = 'alta';
         }
 
-        const stock = typeof product.stock === 'number'
-          ? product.stock
-          : typeof product.cantidad === 'number'
-            ? product.cantidad
-            : null;
-
+        const stockCandidates = [product.stock, product.cantidad];
+        const rawStock = stockCandidates.find(value => value !== undefined && value !== null && value !== '');
+        const stockValue = rawStock !== undefined && rawStock !== null && rawStock !== '' ? Number(rawStock) : NaN;
+        const stockText = Number.isFinite(stockValue) ? ` Stock disponible: ${stockValue}.` : '';
         const directionText = isHigh ? 'alto' : 'bajo';
 
-        const stockText = stock !== null ? ` Stock disponible: ${stock}.` : '';
-
-        return {
+        alerts.push({
           id: Date.now() + Math.random(),
           tipo_alerta: 'oportunidades_precio',
           producto_id: product.id,
-          mensaje: `Precio ${directionText} detectado para ${product.nombre || 'producto'}. Actual: $${price.toFixed(2)} vs promedio $${avgPrice.toFixed(2)} (${variacionTexto}).${stockText}`.trim(),
+          mensaje: `Precio ${directionText} detectado para ${product.nombre || 'producto'}. Actual: $${priceValue.toFixed(2)} vs promedio $${avgPrice.toFixed(2)} (${variacionTexto}).${stockText}`.trim(),
           nivel_prioridad: prioridad,
           fecha_creacion: new Date().toISOString(),
           product,
           promedioReferencia: avgPrice
-        };
-      });
+        });
+      }
+
+      return alerts.slice(0, 10);
 
     } catch (error) {
       console.error('❌ Error creando alertas de oportunidades de precio:', error);
