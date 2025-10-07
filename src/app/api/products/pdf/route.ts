@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/database';
 import PDFService from '@/lib/pdfService';
-import fs from 'fs';
-import path from 'path';
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,28 +22,19 @@ export async function GET(request: NextRequest) {
     // Generar el PDF
     const pdfBuffer = await PDFService.generateProductsPDF(result.rows);
 
-    // Generar nombre único para el archivo
+    // Generar nombre para el archivo
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const fileName = `productos-${timestamp}.pdf`;
+    const fileName = `catalogo-productos-${timestamp}.pdf`;
 
-    // Guardar el PDF en la carpeta public/uploads
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
-    const filePath = path.join(uploadsDir, fileName);
-    fs.writeFileSync(filePath, Buffer.from(pdfBuffer));
-
-    // Retornar JSON con información del archivo (compatible con HTML original)
-    return NextResponse.json({
-      success: true,
-      message: 'PDF generado exitosamente',
-      data: {
-        filename: fileName,
-        downloadUrl: `/uploads/${fileName}`,
-        timestamp: new Date().toISOString(),
-        totalProducts: result.rows.length
+    // Retornar el PDF directamente como respuesta (sin guardarlo)
+    return new NextResponse(Buffer.from(pdfBuffer), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${fileName}"`,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       }
     });
 

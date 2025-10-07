@@ -1,0 +1,6 @@
+# Ignorar todos los archivos PDF generados
+*.pdf
+
+# Ignorar todos los archivos excepto este .gitignore
+*
+!.gitignore
