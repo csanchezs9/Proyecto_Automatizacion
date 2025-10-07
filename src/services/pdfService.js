@@ -469,7 +469,7 @@ class PDFService {
           bufferPages: true,
           info: {
             Title: 'Catálogo de Productos',
-            Author: 'Sistema de Automatización',
+            Author: 'Cyntex',
             Subject: 'Catálogo de Productos Profesional',
             Keywords: 'catálogo, productos, PDF, minimalista'
           }

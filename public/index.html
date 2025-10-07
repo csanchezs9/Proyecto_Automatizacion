@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Automatización</title>
+    <title>Cyntex</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
@@ -45,14 +45,14 @@
         }
 
         .logo i {
-            font-size: 24px;
+            font-size: 32px;
             color: #00d4ff;
         }
 
         .logo h2 {
             color: #ffffff;
             font-weight: 700;
-            font-size: 1.2rem;
+            font-size: 2.2rem;
         }
 
         .nav-menu {
@@ -136,11 +136,14 @@
             margin-bottom: 3rem;
         }
 
-        .header h1 {
-            color: #ffffff;
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
+        .tagline {
+            color: #e2e8f0;
+            font-size: 1.5rem;
+            font-weight: 500;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0;
+            white-space: nowrap;
         }
 
         .server-status {
@@ -149,9 +152,9 @@
             gap: 8px;
             background: linear-gradient(135deg, #22c55e20, #16a34a20);
             border: 1px solid #16a34a;
-            padding: 0.75rem 1.5rem;
+            padding: 0.75rem 1.75rem;
             border-radius: 50px;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 600;
         }
 
@@ -995,6 +998,499 @@
             background: #00d4ff;
             color: white;
         }
+
+        /* Estilos para formularios de email */
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            background: rgba(15, 23, 42, 1);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            background: rgba(15, 23, 42, 1);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 0.95rem;
+            resize: vertical;
+            transition: all 0.3s ease;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+            background: rgba(15, 23, 42, 1);
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            color: #94a3b8;
+            transition: color 0.3s ease;
+        }
+
+        .checkbox-label:hover {
+            color: #00d4ff;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .clientes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .cliente-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .cliente-card:hover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .cliente-card h4 {
+            color: #ffffff;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cliente-card p {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin: 0.25rem 0;
+        }
+
+        .cliente-card small {
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        /* Dropdown de clientes */
+        .clientes-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.98);
+            border: 1px solid #00d4ff;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0, 212, 255, 0.2);
+        }
+
+        .cliente-item {
+            padding: 1rem;
+            border-bottom: 1px solid #334155;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .cliente-item:last-child {
+            border-bottom: none;
+        }
+
+        .cliente-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .cliente-item-nombre {
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .cliente-item-email {
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        .cliente-item-telefono {
+            color: #64748b;
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+
+        .no-clientes-found {
+            padding: 2rem;
+            text-align: center;
+            color: #64748b;
+        }
+
+        /* ========== ESTILOS PARA EMAILS - DISEÑO BOLT EXACTO ========== */
+        
+        /* Main Card Container */
+        .email-main-card {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            overflow: hidden;
+        }
+
+        /* Card Header */
+        .email-card-header {
+            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+            background: linear-gradient(to right, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8));
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .email-header-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: #00d4ff;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .email-header-icon i {
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .email-card-header h3 {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* Card Body */
+        .email-card-body {
+            padding: 2rem;
+        }
+
+        /* Info Card arriba (después del header) */
+        .email-info-card-top {
+            background: rgba(0, 212, 255, 0.05);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .email-input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .email-input-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+        }
+
+        .email-input-group label i {
+            color: #00d4ff;
+            font-size: 1rem;
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+
+        .email-input-group input[type="text"],
+        .email-input-group textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid #475569;
+            border-radius: 0.75rem;
+            color: white;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .email-input-group input[type="text"]:focus,
+        .email-input-group textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+        }
+
+        .email-input-group input::placeholder,
+        .email-input-group textarea::placeholder {
+            color: #64748b;
+        }
+
+        .email-input-group textarea {
+            resize: none;
+            line-height: 1.6;
+        }
+
+        .readonly-input {
+            cursor: not-allowed !important;
+            opacity: 0.7 !important;
+            background: rgba(15, 23, 42, 0.3) !important;
+        }
+
+        /* Checkbox Wrapper */
+        .email-checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.3);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .email-checkbox-wrapper input[type="checkbox"] {
+            width: 1.25rem;
+            height: 1.25rem;
+            cursor: pointer;
+            accent-color: #00d4ff;
+            border-radius: 0.25rem;
+            background: #1e293b;
+            border: 1px solid #475569;
+        }
+
+        .email-checkbox-wrapper label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #cbd5e1;
+            font-size: 0.875rem;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .email-checkbox-wrapper label i {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        /* Action Buttons */
+        .email-actions {
+            display: flex;
+            gap: 1rem;
+            padding-top: 1rem;
+        }
+
+        .btn-email-send {
+            flex: 1;
+            background: #00d4ff;
+            color: white;
+            border: none;
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(0, 212, 255, 0.2);
+        }
+
+        .btn-email-send:hover {
+            background: #0ea5e9;
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.3);
+            transform: scale(1.02);
+        }
+
+        .btn-email-send:active {
+            transform: scale(0.98);
+        }
+
+        .btn-email-clear {
+            background: rgba(71, 85, 105, 0.5);
+            color: #cbd5e1;
+            border: none;
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-email-clear:hover {
+            background: rgba(71, 85, 105, 0.8);
+            transform: scale(1.02);
+        }
+
+        .btn-email-clear:active {
+            transform: scale(0.98);
+        }
+
+        /* Checkbox PDF Atractivo */
+        .pdf-attachment-box {
+            margin: 1.5rem 0;
+            padding: 1.25rem;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(22, 163, 74, 0.08));
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .pdf-attachment-box:hover {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(22, 163, 74, 0.12));
+            border-color: rgba(34, 197, 94, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+        }
+
+        .pdf-checkbox-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            cursor: pointer;
+        }
+
+        .pdf-checkbox-container input[type="checkbox"] {
+            width: 1.5rem;
+            height: 1.5rem;
+            cursor: pointer;
+            accent-color: #22c55e;
+            flex-shrink: 0;
+            margin-top: 0.25rem;
+        }
+
+        .pdf-checkbox-container label {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            cursor: pointer;
+            flex: 1;
+            margin: 0;
+        }
+
+        .checkbox-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
+        }
+
+        .checkbox-icon i {
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .checkbox-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .checkbox-title {
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            display: block;
+        }
+
+        .checkbox-subtitle {
+            color: #94a3b8;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            display: block;
+        }
+
+        .info-icon-bolt {
+            width: 2rem;
+            height: 2rem;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 0.125rem;
+        }
+
+        .info-icon-bolt i {
+            color: #00d4ff;
+            font-size: 1.25rem;
+        }
+
+        .info-content-bolt h4 {
+            color: white;
+            font-size: 1rem;
+            font-weight: 500;
+            margin: 0 0 0.25rem 0;
+        }
+
+        .info-content-bolt p {
+            color: #94a3b8;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -1008,7 +1504,7 @@
         <div class="sidebar" id="sidebar">
             <div class="logo">
                 <i class="fas fa-cog"></i>
-                <h2>Sistema de Automatización</h2>
+                <h2>Cyntex</h2>
             </div>
             
             <ul class="nav-menu">
@@ -1032,6 +1528,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" onclick="showSection('emails')">
+                        <i class="fas fa-envelope"></i>
+                        <span>Enviar Correos</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" onclick="showSection('utilities')">
                         <i class="fas fa-tools"></i>
                         <span>Utilidades</span>
@@ -1043,7 +1545,7 @@
         <!-- Main Content -->
         <div class="main-content">
             <div class="header">
-                <h1>Sistema de Automatización</h1>
+                <p class="tagline">Automatización Inteligente para Empresas que Buscan Eficiencia y Reducción de Costos</p>
                 <div id="server-status" class="server-status status-offline">
                     <span class="status-dot"></span>
                     Servidor Offline
@@ -1229,6 +1731,120 @@
                 </div>
             </div>
 
+            <!-- Emails Section -->
+            <div id="emails-section" class="content-section">
+                <div class="content-area">
+                    <div class="email-main-card">
+                        <!-- Card Header con icono -->
+                        <div class="email-card-header">
+                            <div class="email-header-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <h3>Enviar Correos</h3>
+                        </div>
+
+                        <!-- Info Card arriba -->
+                        <div class="email-info-card-top">
+                            <div class="info-icon-bolt">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="info-content-bolt">
+                                <h4>Sistema de Envío Automático</h4>
+                                <p>Los correos se enviarán automáticamente al cliente seleccionado. Si adjuntas el catálogo PDF, se incluirá como archivo en el correo.</p>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="email-card-body">
+                            <!-- Buscar Cliente -->
+                            <div class="email-input-group">
+                                <label>
+                                    <i class="fas fa-search"></i> Buscar Cliente
+                                </label>
+                                <div class="search-wrapper">
+                                    <input 
+                                        type="text" 
+                                        id="email-cliente-search" 
+                                        placeholder="Buscar cliente..."
+                                        autocomplete="off"
+                                        onfocus="mostrarListaClientes()"
+                                        oninput="filtrarClientes()"
+                                    >
+                                    <div id="clientes-dropdown" class="clientes-dropdown" style="display: none;"></div>
+                                </div>
+                                <input type="hidden" id="email-cliente-id">
+                                <input type="hidden" id="email-cliente-nombre">
+                            </div>
+
+                            <!-- Email del cliente seleccionado (solo lectura) -->
+                            <div class="email-input-group" id="email-cliente-display" style="display: none;">
+                                <label>
+                                    <i class="fas fa-at"></i> Correo Electrónico
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="email-cliente-email" 
+                                    readonly
+                                    class="readonly-input"
+                                >
+                            </div>
+
+                            <!-- Asunto -->
+                            <div class="email-input-group">
+                                <label>
+                                    <i class="fas fa-file-alt"></i> Asunto del Correo
+                                </label>
+                                <input 
+                                    type="text" 
+                                    id="email-asunto" 
+                                    placeholder="Ej: Catálogo de Productos - Nuevas Ofertas"
+                                >
+                            </div>
+
+                            <!-- Mensaje -->
+                            <div class="email-input-group">
+                                <label>
+                                    <i class="fas fa-envelope"></i> Mensaje
+                                </label>
+                                <textarea 
+                                    id="email-mensaje" 
+                                    rows="8"
+                                    placeholder="Escribe aquí el mensaje para tu cliente..."
+                                ></textarea>
+                            </div>
+
+                            <!-- Checkbox PDF Atractivo -->
+                            <div class="pdf-attachment-box">
+                                <div class="pdf-checkbox-container">
+                                    <input type="checkbox" id="email-adjuntar-catalogo" checked>
+                                    <label for="email-adjuntar-catalogo">
+                                        <div class="checkbox-icon">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </div>
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-title">Adjuntar catálogo de productos en PDF</span>
+                                            <span class="checkbox-subtitle">El catálogo PDF se generará automáticamente con todos los productos disponibles</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="email-actions">
+                                <button class="btn-email-send" onclick="enviarCorreo()">
+                                    <i class="fas fa-paper-plane"></i>
+                                    Enviar Correo
+                                </button>
+                                <button class="btn-email-clear" onclick="limpiarFormularioEmail()">
+                                    <i class="fas fa-trash-alt"></i>
+                                    Limpiar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Utilities Section -->
             <div id="utilities-section" class="content-section">
                 <div class="content-area">
@@ -1385,7 +2001,7 @@
                 .then(data => {
                     const statusElement = document.getElementById('server-status');
                     statusElement.className = 'server-status status-online';
-                    statusElement.innerHTML = '<span class="status-dot"></span>Servidor Online - API funcionando correctamente';
+                    statusElement.innerHTML = '<span class="status-dot"></span>Servidor Online';
                 })
                 .catch(error => {
                     const statusElement = document.getElementById('server-status');
@@ -1749,6 +2365,188 @@
                 closeModal();
             }
         });
+
+        // ========== FUNCIONES PARA SISTEMA DE CORREOS ==========
+        
+        let todosLosClientes = [];
+
+        // Cargar clientes al iniciar
+        async function cargarClientes() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/clientes`);
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    todosLosClientes = data.data;
+                }
+            } catch (error) {
+                console.error('Error cargando clientes:', error);
+                showNotification('Error al cargar clientes', 'error');
+            }
+        }
+
+        function mostrarListaClientes() {
+            const dropdown = document.getElementById('clientes-dropdown');
+            if (todosLosClientes.length === 0) {
+                dropdown.innerHTML = '<div class="no-clientes-found"><i class="fas fa-users"></i><p>No hay clientes disponibles</p></div>';
+            } else {
+                dropdown.innerHTML = todosLosClientes.map(cliente => `
+                    <div class="cliente-item" onclick="seleccionarCliente(${cliente.id}, '${cliente.nombre.replace(/'/g, "\\'")}', '${cliente.email}')">
+                        <div class="cliente-item-nombre">${cliente.nombre}</div>
+                        <div class="cliente-item-email">${cliente.email}</div>
+                        ${cliente.telefono ? `<div class="cliente-item-telefono"><i class="fas fa-phone"></i> ${cliente.telefono}</div>` : ''}
+                    </div>
+                `).join('');
+            }
+            dropdown.style.display = 'block';
+        }
+
+        function filtrarClientes() {
+            const searchText = document.getElementById('email-cliente-search').value.toLowerCase();
+            const dropdown = document.getElementById('clientes-dropdown');
+            
+            if (searchText.length === 0) {
+                mostrarListaClientes();
+                return;
+            }
+
+            const clientesFiltrados = todosLosClientes.filter(cliente =>
+                cliente.nombre.toLowerCase().includes(searchText) ||
+                cliente.email.toLowerCase().includes(searchText)
+            );
+
+            if (clientesFiltrados.length === 0) {
+                dropdown.innerHTML = '<div class="no-clientes-found"><i class="fas fa-search"></i><p>No se encontraron clientes</p></div>';
+            } else {
+                dropdown.innerHTML = clientesFiltrados.map(cliente => `
+                    <div class="cliente-item" onclick="seleccionarCliente(${cliente.id}, '${cliente.nombre.replace(/'/g, "\\'")}', '${cliente.email}')">
+                        <div class="cliente-item-nombre">${cliente.nombre}</div>
+                        <div class="cliente-item-email">${cliente.email}</div>
+                        ${cliente.telefono ? `<div class="cliente-item-telefono"><i class="fas fa-phone"></i> ${cliente.telefono}</div>` : ''}
+                    </div>
+                `).join('');
+            }
+            dropdown.style.display = 'block';
+        }
+
+        function seleccionarCliente(id, nombre, email) {
+            document.getElementById('email-cliente-id').value = id;
+            document.getElementById('email-cliente-nombre').value = nombre;
+            document.getElementById('email-cliente-email').value = email;
+            document.getElementById('email-cliente-search').value = nombre;
+            document.getElementById('clientes-dropdown').style.display = 'none';
+            
+            // Mostrar el campo de email (solo lectura)
+            document.getElementById('email-cliente-display').style.display = 'block';
+        }
+
+        // Cerrar dropdown al hacer click fuera
+        document.addEventListener('click', function(e) {
+            const searchInput = document.getElementById('email-cliente-search');
+            const dropdown = document.getElementById('clientes-dropdown');
+            if (searchInput && dropdown && !searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        async function enviarCorreo() {
+            const clienteId = document.getElementById('email-cliente-id').value;
+            const clienteEmail = document.getElementById('email-cliente-email').value;
+            const clienteNombre = document.getElementById('email-cliente-nombre').value;
+            const asunto = document.getElementById('email-asunto').value.trim();
+            const mensaje = document.getElementById('email-mensaje').value.trim();
+            const adjuntarCatalogo = document.getElementById('email-adjuntar-catalogo').checked;
+
+            // Validaciones
+            if (!clienteId || !clienteEmail) {
+                showNotification('Por favor selecciona un cliente', 'error');
+                return;
+            }
+
+            if (!asunto) {
+                showNotification('Por favor ingresa el asunto del correo', 'error');
+                return;
+            }
+
+            if (!mensaje) {
+                showNotification('Por favor escribe un mensaje', 'error');
+                return;
+            }
+
+            try {
+                // Mostrar loading en el botón
+                const btnEnviar = event.target;
+                const originalHTML = btnEnviar.innerHTML;
+                btnEnviar.disabled = true;
+                btnEnviar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+                const response = await fetch(`${API_BASE_URL}/api/emails/send`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        clienteId: clienteId,
+                        email: clienteEmail,
+                        nombre: clienteNombre,
+                        asunto: asunto,
+                        mensaje: mensaje,
+                        adjuntarCatalogo: adjuntarCatalogo
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(`✅ Correo enviado exitosamente a ${clienteNombre}`, 'success');
+                    limpiarFormularioEmail();
+                } else {
+                    throw new Error(data.message || 'Error al enviar el correo');
+                }
+
+                // Restaurar botón
+                btnEnviar.disabled = false;
+                btnEnviar.innerHTML = originalHTML;
+
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('❌ ' + error.message, 'error');
+                
+                // Restaurar botón
+                const btnEnviar = event.target;
+                btnEnviar.disabled = false;
+                btnEnviar.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Correo';
+            }
+        }
+
+        function limpiarFormularioEmail() {
+            document.getElementById('email-cliente-id').value = '';
+            document.getElementById('email-cliente-nombre').value = '';
+            document.getElementById('email-cliente-email').value = '';
+            document.getElementById('email-cliente-search').value = '';
+            document.getElementById('email-asunto').value = '';
+            document.getElementById('email-mensaje').value = '';
+            document.getElementById('email-adjuntar-catalogo').checked = true;
+            document.getElementById('email-cliente-display').style.display = 'none';
+        }
+
+        // Cargar clientes cuando se muestra la sección de emails
+        const emailsSection = document.getElementById('emails-section');
+        if (emailsSection) {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.target.classList.contains('active')) {
+                        cargarClientes();
+                    }
+                });
+            });
+
+            observer.observe(emailsSection, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+        }
+
     </script>
 </body>
 </html>
