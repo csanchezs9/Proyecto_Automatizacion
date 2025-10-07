@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Automatización</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0f172a, #1e293b);
+            padding: 2rem 1.5rem;
+            border-right: 1px solid #334155;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 3rem;
+            padding: 0.5rem 0;
+        }
+
+        .logo i {
+            font-size: 24px;
+            color: #00d4ff;
+        }
+
+        .logo h2 {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 1rem;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: linear-gradient(135deg, #00d4ff20, #0ea5e920);
+            color: #00d4ff;
+            transform: translateX(5px);
+        }
+
+        /* Estilo especial para Dashboard Empresarial */
+        .nav-link.enterprise-dashboard {
+            background: linear-gradient(135deg, #f59e0b20, #d9770620);
+            border: 1px solid #f59e0b40;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link.enterprise-dashboard::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .nav-link.enterprise-dashboard:hover::before {
+            left: 100%;
+        }
+
+        .nav-link.enterprise-dashboard:hover {
+            background: linear-gradient(135deg, #f59e0b30, #d9770630);
+            color: #fbbf24;
+            transform: translateX(8px);
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .nav-link.enterprise-dashboard i:first-child {
+            color: #fbbf24;
+        }
+
+        .nav-link i {
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem 3rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            color: #ffffff;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .server-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #22c55e20, #16a34a20);
+            border: 1px solid #16a34a;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .status-offline .status-dot {
+            background: #ef4444;
+        }
+
+        .status-offline {
+            background: linear-gradient(135deg, #ef444420, #dc262620);
+            border-color: #ef4444;
+        }
+
+        /* Content Area */
+        .content-area {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 1px solid #475569;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #00d4ff, transparent);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #ffffff;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+        }
+
+        .section-title i {
+            color: #00d4ff;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #00d4ff, #0ea5e9);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 212, 255, 0.3);
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #64748b, #475569);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #475569, #334155);
+            box-shadow: 0 10px 25px rgba(100, 116, 139, 0.3);
+        }
+
+        /* Input Group */
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            color: #e2e8f0;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(30, 41, 59, 0.5);
+            border: 2px solid #475569;
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+
+        .input-group input::placeholder {
+            color: #64748b;
+        }
+
+        /* Select styling */
+        .input-group select {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(30, 41, 59, 0.5);
+            border: 2px solid #475569;
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+
+        .input-group select option {
+            background: #1e293b;
+            color: #ffffff;
+        }
+
+        /* Results */
+        .result {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            font-family: 'Fira Code', monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .result-success {
+            border-color: #22c55e;
+            background: linear-gradient(135deg, #22c55e10, #16a34a10);
+        }
+
+        .result-error {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, #ef444410, #dc262610);
+        }
+
+        /* Form Container */
+        .form-container {
+            margin: 1.5rem 0;
+            padding: 2rem;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border: 1px solid #475569;
+            border-radius: 16px;
+            animation: slideDown 0.3s ease;
+        }
+
+        .form-container h3 {
+            color: #00d4ff;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .form-container textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        /* Product Cards */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .product-card {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border: 1px solid #475569;
+            border-radius: 12px;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+            border-color: #00d4ff;
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.1);
+        }
+
+        .product-id {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-bottom: 0.1rem;
+            font-weight: 400;
+        }
+
+        .product-image {
+            width: 100%;
+            height: auto;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-bottom: 0.3rem;
+            border: 1px solid #475569;
+            transition: all 0.3s ease;
+            background: rgba(15, 23, 42, 0.3);
+        }
+
+        .product-image:hover {
+            border-color: #00d4ff;
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.1);
+        }
+
+        .product-image-placeholder {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(135deg, #334155, #475569);
+            border-radius: 8px;
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 0.9rem;
+            border: 1px solid #475569;
+        }
+
+        .product-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.05rem;
+        }
+
+        .product-description {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            line-height: 1.3;
+            margin-bottom: 0.15rem;
+        }
+
+        .product-price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #22c55e;
+            margin-bottom: 0.2rem;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: 1px solid #dc2626;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+        }
+
+        .btn-delete:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-delete i {
+            font-size: 0.8rem;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loading {
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .loading::before {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border: 2px solid #00d4ff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 1px solid #475569;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+
+        .modal-icon i {
+            font-size: 36px;
+            color: white;
+        }
+
+        .modal h3 {
+            color: #ffffff;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .modal p {
+            color: #94a3b8;
+            margin-bottom: 2rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .success-details {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: left;
+        }
+
+        .success-details div {
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .success-details .label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .success-details .value {
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        /* Products Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .product-card {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border: 1px solid #475569;
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.1);
+            border-color: #00d4ff;
+        }
+
+        .product-id {
+            background: linear-gradient(135deg, #00d4ff, #0ea5e9);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .product-name {
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .product-description {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .product-price {
+            font-weight: 700;
+            color: #22c55e;
+            font-size: 1.2rem;
+        }
+
+        /* Stats */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border: 1px solid #475569;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: #00d4ff;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #00d4ff;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 999;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .mobile-toggle {
+                display: block;
+                position: fixed;
+                top: 1rem;
+                left: 1rem;
+                z-index: 1000;
+                background: linear-gradient(135deg, #00d4ff, #0ea5e9);
+                border: none;
+                padding: 0.75rem;
+                border-radius: 12px;
+                color: white;
+                cursor: pointer;
+                font-size: 1.2rem;
+            }
+        }
+
+        .mobile-toggle {
+            display: none;
+        }
+
+        /* Hide sections initially */
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        /* PDF Cards Styles */
+        .pdf-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8));
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pdf-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #00d4ff, #0ea5e9);
+        }
+
+        .pdf-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
+        }
+
+        .pdf-card-premium {
+            opacity: 0.7;
+        }
+
+        .pdf-card-premium::before {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+
+        .pdf-card-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00d4ff20, #0ea5e920);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .pdf-card-icon i {
+            font-size: 28px;
+            color: #00d4ff;
+        }
+
+        .pdf-card-premium .pdf-card-icon {
+            background: linear-gradient(135deg, #f59e0b20, #d9770620);
+        }
+
+        .pdf-card-premium .pdf-card-icon i {
+            color: #f59e0b;
+        }
+
+        .pdf-card h3 {
+            color: #ffffff;
+            font-size: 1.3rem;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+        }
+
+        .pdf-card p {
+            color: #94a3b8;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .pdf-features {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .pdf-features li {
+            color: #cbd5e1;
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pdf-features li i {
+            color: #10b981;
+            font-size: 14px;
+        }
+
+        .pdf-card-premium .pdf-features li i {
+            color: #f59e0b;
+        }
+
+        .btn-pdf-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #00d4ff, #0ea5e9);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-pdf-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-pdf-secondary {
+            width: 100%;
+            background: linear-gradient(135deg, #64748b, #475569);
+            color: #94a3b8;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: not-allowed;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .pdf-card-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .pdf-history-section {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: rgba(30, 41, 59, 0.3);
+            border: 1px solid #334155;
+            border-radius: 16px;
+        }
+
+        .pdf-history-section h4 {
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pdf-history-section h4 i {
+            color: #00d4ff;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #64748b;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state small {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .pdf-history-item {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .pdf-history-item:hover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .pdf-history-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .pdf-history-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #00d4ff20, #0ea5e920);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00d4ff;
+        }
+
+        .pdf-history-details h5 {
+            color: #ffffff;
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+        }
+
+        .pdf-history-details small {
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        .pdf-history-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-history-action {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-history-action:hover {
+            background: #00d4ff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Mobile Toggle -->
+        <button class="mobile-toggle" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="logo">
+                <i class="fas fa-cog"></i>
+                <h2>Sistema de Automatización</h2>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a class="nav-link enterprise-dashboard" onclick="openEnterpriseDashboard()">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Dashboard Empresarial</span>
+                        <i class="fas fa-external-link-alt" style="margin-left: auto; font-size: 0.8rem; opacity: 0.7;"></i>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" onclick="showSection('products')">
+                        <i class="fas fa-boxes"></i>
+                        <span>Gestión de Productos</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showSection('pdfs')">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>Generación de PDFs</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showSection('utilities')">
+                        <i class="fas fa-tools"></i>
+                        <span>Utilidades</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h1>Sistema de Automatización</h1>
+                <div id="server-status" class="server-status status-offline">
+                    <span class="status-dot"></span>
+                    Servidor Offline
+                </div>
+            </div>
+
+            <!-- Products Section -->
+            <div id="products-section" class="content-section active">
+                <div class="content-area">
+                    <div class="section-title">
+                        <i class="fas fa-boxes"></i>
+                        <span>Gestión de Productos</span>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn" onclick="getAllProducts()">
+                            <i class="fas fa-list"></i>
+                            Ver Gestión de Productos
+                        </button>
+                        <button class="btn" onclick="toggleAddProductForm()">
+                            <i class="fas fa-plus"></i>
+                            Agregar Nuevo Producto
+                        </button>
+                    </div>
+
+                    <!-- Formulario para agregar producto -->
+                    <div id="addProductForm" class="form-container" style="display: none;">
+                        <h3>Agregar Nuevo Producto</h3>
+                        <div class="input-group">
+                            <label for="productName">Nombre del Producto:</label>
+                            <input type="text" id="productName" placeholder="Tu producto">
+                        </div>
+                        <div class="input-group">
+                            <label for="productDescription">Descripción:</label>
+                            <input type="text" id="productDescription" placeholder="Descripción detallada del producto" rows="3"></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label for="productPrice">Precio:</label>
+                            <input type="number" id="productPrice" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <div class="input-group">
+                            <label for="productTalla">Talla:</label>
+                            <select id="productTalla">
+                                <option value="Única">Única</option>
+                                <option value="XS">XS</option>
+                                <option value="S">S</option>
+                                <option value="M">M</option>
+                                <option value="L">L</option>
+                                <option value="XL">XL</option>
+                                <option value="XXL">XXL</option>
+                                <option value="34">34</option>
+                                <option value="36">36</option>
+                                <option value="38">38</option>
+                                <option value="40">40</option>
+                                <option value="42">42</option>
+                                <option value="44">44</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="productCantidad">Cantidad en Stock:</label>
+                            <input type="number" id="productCantidad" placeholder="10" min="0" value="10">
+                        </div>
+                        <div class="input-group">
+                            <label for="productImage">Imagen del Producto:</label>
+                            <input type="file" id="productImage" accept="image/*" onchange="previewImage(this)">
+                            <small style="color: #64748b; margin-top: 0.5rem; display: block;">
+                                Formatos permitidos: JPG, PNG, WEBP. Máximo 5MB.
+                            </small>
+                        </div>
+                        <div id="imagePreview" style="display: none; margin: 1rem 0;">
+                            <img id="previewImg" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 1px solid #475569;">
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn" onclick="createProduct()">
+                                <i class="fas fa-save"></i>
+                                Guardar Producto
+                            </button>
+                            <button class="btn btn-secondary" onclick="cancelAddProduct()">
+                                <i class="fas fa-times"></i>
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="productId">Buscar por ID:</label>
+                        <input type="text" id="productId" placeholder="Ej: c-1, c-2, 123">
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="getProductById()">
+                            <i class="fas fa-search"></i>
+                            Buscar por ID
+                        </button>
+                    </div>
+
+                    <div id="products-result" class="result" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- PDFs Section -->
+            <div id="pdfs-section" class="content-section">
+                <div class="content-area">
+                    <div class="section-title" style="margin-bottom: 2rem;">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>Generación de PDFs</span>
+                    </div>
+                    
+                    <!-- Cards de opciones de PDF -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                        
+                        <!-- PDF Básico -->
+                        <div class="pdf-card">
+                            <div class="pdf-card-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <h3>Catálogo Básico</h3>
+                            <p>Genera un PDF simple con todos los productos del inventario</p>
+                            <ul class="pdf-features">
+                                <li><i class="fas fa-check"></i> Todos los productos</li>
+                                <li><i class="fas fa-check"></i> Información básica</li>
+                                <li><i class="fas fa-check"></i> Generación rápida</li>
+                            </ul>
+                            <button class="btn-pdf-primary" onclick="generatePDF()">
+                                <i class="fas fa-download"></i>
+                                Generar PDF Básico
+                            </button>
+                        </div>
+
+                        <!-- PDF Avanzado (próximamente) -->
+                        <div class="pdf-card pdf-card-premium">
+                            <div class="pdf-card-badge">Próximamente</div>
+                            <div class="pdf-card-icon">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <h3>Catálogo Premium</h3>
+                            <p>Catálogo profesional con diseño personalizado y filtros avanzados</p>
+                            <ul class="pdf-features">
+                                <li><i class="fas fa-star"></i> Diseño profesional</li>
+                                <li><i class="fas fa-star"></i> Filtros personalizados</li>
+                                <li><i class="fas fa-star"></i> Imágenes de productos</li>
+                            </ul>
+                            <button class="btn-pdf-secondary" disabled>
+                                <i class="fas fa-lock"></i>
+                                Próximamente
+                            </button>
+                        </div>
+
+                        <!-- Reportes (próximamente) -->
+                        <div class="pdf-card pdf-card-premium">
+                            <div class="pdf-card-badge">Próximamente</div>
+                            <div class="pdf-card-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <h3>Reportes Analíticos</h3>
+                            <p>Reportes detallados con gráficos y análisis de inventario</p>
+                            <ul class="pdf-features">
+                                <li><i class="fas fa-star"></i> Gráficos estadísticos</li>
+                                <li><i class="fas fa-star"></i> Análisis de tendencias</li>
+                                <li><i class="fas fa-star"></i> Métricas de negocio</li>
+                            </ul>
+                            <button class="btn-pdf-secondary" disabled>
+                                <i class="fas fa-lock"></i>
+                                Próximamente
+                            </button>
+                        </div>
+
+                    </div>
+
+                    <!-- Historial de PDFs generados -->
+                    <div class="pdf-history-section">
+                        <h4><i class="fas fa-history"></i> PDFs Generados Recientemente</h4>
+                        <div id="pdfHistoryContainer">
+                            <div class="empty-state">
+                                <i class="fas fa-folder-open"></i>
+                                <p>No hay PDFs generados aún</p>
+                                <small>Genera tu primer catálogo para verlo aquí</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="pdfs-result" class="result" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Utilities Section -->
+            <div id="utilities-section" class="content-section">
+                <div class="content-area">
+                    <div class="section-title">
+                        <i class="fas fa-tools"></i>
+                        <span>Utilidades</span>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="checkHealth()">
+                            <i class="fas fa-heartbeat"></i>
+                            Estado del Servidor
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearResults()">
+                            <i class="fas fa-broom"></i>
+                            Limpiar Resultados
+                        </button>
+                    </div>
+
+                    <div id="utilities-result" class="result" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <h3>PDF generado exitosamente</h3>
+            <p>Tu archivo PDF ha sido creado y está listo para descargar.</p>
+            
+            <div class="success-details" id="pdfDetails">
+                <div>
+                    <span class="label">Archivo:</span>
+                    <span class="value" id="pdfFilename">productos-2025-09-17.pdf</span>
+                </div>
+                <div>
+                    <span class="label">Total productos:</span>
+                    <span class="value" id="pdfProductCount">52</span>
+                </div>
+                <div>
+                    <span class="label">Generado:</span>
+                    <span class="value" id="pdfTimestamp">17/9/2025, 12:20:19</span>
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn" id="downloadBtn">
+                    <i class="fas fa-download"></i>
+                    Descargar PDF
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal()">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000';
+        
+        // Configuración de Supabase
+        const SUPABASE_URL = 'https://xdhymmzmxbaxxmregzuh.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhkaHltbXpteGJheHhtcmVnenVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY1NzcyMTMsImV4cCI6MjA0MjE1MzIxM30.zNzNn0xgXOx_XKu_EiEhRkK9g6CJ7iWZJZ8p4vJH0cY';
+
+        window.onload = function() {
+            checkServerStatus();
+        };
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('show');
+        }
+
+        function openEnterpriseDashboard() {
+            // Abrir Dashboard Empresarial en nueva pestaña
+            const dashboardUrl = `./dashboard-empresarial.html`;
+            window.open(dashboardUrl, '_blank');
+            
+            // Mostrar notificación
+            showNotification('🚀 Abriendo Dashboard Empresarial...', 'info');
+            
+            // Close sidebar on mobile
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('show');
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            // Crear elemento de notificación
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' : 
+                           type === 'error' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 
+                           'linear-gradient(135deg, #3b82f6, #2563eb)'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                z-index: 10000;
+                font-weight: 500;
+                transform: translateX(400px);
+                transition: transform 0.3s ease;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Animar entrada
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Remover después de 3 segundos
+            setTimeout(() => {
+                notification.style.transform = 'translateX(400px)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        function showSection(section) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(s => s.classList.remove('active'));
+
+            // Remove active class from all nav links
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => link.classList.remove('active'));
+
+            // Show selected section
+            document.getElementById(section + '-section').classList.add('active');
+
+            // Add active class to clicked nav link
+            event.target.closest('.nav-link').classList.add('active');
+
+            // Close sidebar on mobile
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('show');
+            }
+        }
+
+        function checkServerStatus() {
+            fetch(`${API_BASE_URL}/health`)
+                .then(response => response.json())
+                .then(data => {
+                    const statusElement = document.getElementById('server-status');
+                    statusElement.className = 'server-status status-online';
+                    statusElement.innerHTML = '<span class="status-dot"></span>Servidor Online - API funcionando correctamente';
+                })
+                .catch(error => {
+                    const statusElement = document.getElementById('server-status');
+                    statusElement.className = 'server-status status-offline';
+                    statusElement.innerHTML = '<span class="status-dot"></span>Servidor Offline';
+                });
+        }
+
+        function showLoading(section) {
+            const resultElement = document.getElementById(`${section}-result`);
+            resultElement.style.display = 'block';
+            resultElement.className = 'result';
+            resultElement.innerHTML = '<div class="loading">Cargando...</div>';
+        }
+
+        function hideLoading(section) {
+            const resultElement = document.getElementById(`${section}-result`);
+            resultElement.style.display = 'none';
+        }
+
+        function showResult(section, content, isError = false) {
+            const resultElement = document.getElementById(`${section}-result`);
+            resultElement.style.display = 'block';
+            resultElement.className = `result ${isError ? 'result-error' : 'result-success'}`;
+            resultElement.innerHTML = content;
+        }
+
+        // Función para construir URL de imagen de Supabase (misma lógica que el PDF)
+        function buildSupabaseImageUrl(imageUrl) {
+            if (!imageUrl || imageUrl === 'Sin imagen' || imageUrl.trim() === '') {
+                return null;
+            }
+
+            let finalUrl = imageUrl.trim();
+            
+            // Si ya es una URL completa, usarla directamente
+            if (!finalUrl.startsWith('http')) {
+                // Es solo el nombre del archivo, construir URL completa
+                finalUrl = `https://xdhymmzmxbaxxmregzuh.supabase.co/storage/v1/object/public/imagenes/${finalUrl}`;
+            } else if (finalUrl.includes('supabase.co') && !finalUrl.includes('/storage/v1/object/public/')) {
+                // Convertir URL de Supabase a formato público
+                const fileName = finalUrl.split('/').pop() || finalUrl;
+                finalUrl = `https://xdhymmzmxbaxxmregzuh.supabase.co/storage/v1/object/public/imagenes/${fileName}`;
+            }
+
+            return finalUrl;
+        }
+
+        function getAllProducts() {
+            // Redirigir a la página de gestión de productos
+            window.location.href = `${API_BASE_URL}/GestionProductos`;
+        }
+
+        function getProductById() {
+            const productId = document.getElementById('productId').value;
+            if (!productId) {
+                showResult('products', 'Por favor ingresa un ID de producto', true);
+                return;
+            }
+
+            showLoading('products');
+            fetch(`${API_BASE_URL}/api/products/${productId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const product = data.data;
+                        const html = `
+                            <div class="product-card" style="max-width: 400px; margin: 0 auto;">
+                                <div class="product-id">ID: ${product.id}</div>
+                                <div class="product-name">${product.nombre || 'Sin nombre'}</div>
+                                <div class="product-description">${product.descripcion || 'Sin descripción'}</div>
+                                <div class="product-price">$${product.precio || '0'}</div>
+                            </div>
+                        `;
+                        showResult('products', html);
+                    } else {
+                        showResult('products', `Error: ${data.message}`, true);
+                    }
+                })
+                .catch(error => {
+                    showResult('products', `Error de conexión: ${error.message}`, true);
+                });
+        }
+
+
+
+        function generatePDF() {
+            showLoading('pdfs');
+            fetch(`${API_BASE_URL}/api/products/pdf`)
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading('pdfs');
+                    if (data.success) {
+                        // Agregar al historial
+                        addPDFToHistory(data.data);
+                        
+                        // Show success modal
+                        document.getElementById('pdfFilename').textContent = data.data.filename;
+                        document.getElementById('pdfProductCount').textContent = data.data.totalProducts;
+                        document.getElementById('pdfTimestamp').textContent = new Date(data.data.timestamp).toLocaleString();
+                        
+                        document.getElementById('downloadBtn').onclick = () => {
+                            window.open(`${API_BASE_URL}${data.data.downloadUrl}`, '_blank');
+                        };
+                        
+                        document.getElementById('successModal').classList.add('show');
+                    } else {
+                        showResult('pdfs', `Error: ${data.message}`, true);
+                    }
+                })
+                .catch(error => {
+                    hideLoading('pdfs');
+                    showResult('pdfs', `Error de conexión: ${error.message}`, true);
+                });
+        }
+
+        // Agregar PDF al historial
+        function addPDFToHistory(pdfData) {
+            const historyContainer = document.getElementById('pdfHistoryContainer');
+            
+            // Remover empty state si existe
+            const emptyState = historyContainer.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            // Crear item de historial
+            const historyItem = document.createElement('div');
+            historyItem.className = 'pdf-history-item';
+            historyItem.innerHTML = `
+                <div class="pdf-history-info">
+                    <div class="pdf-history-icon">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div class="pdf-history-details">
+                        <h5>${pdfData.filename}</h5>
+                        <small>${pdfData.totalProducts} productos • ${new Date(pdfData.timestamp).toLocaleString('es-ES')}</small>
+                    </div>
+                </div>
+                <div class="pdf-history-actions">
+                    <button class="btn-history-action" onclick="window.open('${API_BASE_URL}${pdfData.downloadUrl}', '_blank')">
+                        <i class="fas fa-download"></i> Descargar
+                    </button>
+                </div>
+            `;
+            
+            // Insertar al inicio
+            historyContainer.insertBefore(historyItem, historyContainer.firstChild);
+            
+            // Limitar a 5 items en el historial
+            const items = historyContainer.querySelectorAll('.pdf-history-item');
+            if (items.length > 5) {
+                items[items.length - 1].remove();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('successModal').classList.remove('show');
+        }
+
+        function checkHealth() {
+            showLoading('utilities');
+            fetch(`${API_BASE_URL}/health`)
+                .then(response => response.json())
+                .then(data => {
+                    const html = `
+                        <div style="text-align: center; padding: 2rem;">
+                            <div style="font-size: 3rem; color: #22c55e; margin-bottom: 1rem;">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <h3 style="color: #ffffff; margin-bottom: 1rem;">Servidor Funcionando Correctamente</h3>
+                            <div style="color: #94a3b8;">
+                                <p>Estado: ${data.status}</p>
+                                <p>Tiempo activo: ${Math.floor(data.uptime)} segundos</p>
+                                <p>Última verificación: ${new Date(data.timestamp).toLocaleString()}</p>
+                            </div>
+                        </div>
+                    `;
+                    showResult('utilities', html);
+                })
+                .catch(error => {
+                    showResult('utilities', `Error de conexión: ${error.message}`, true);
+                });
+        }
+
+        function clearResults() {
+            const results = document.querySelectorAll('.result');
+            results.forEach(result => {
+                result.style.display = 'none';
+            });
+        }
+
+        // Funciones para agregar productos
+        function toggleAddProductForm() {
+            const form = document.getElementById('addProductForm');
+            if (form.style.display === 'none' || form.style.display === '') {
+                form.style.display = 'block';
+                clearProductForm();
+            } else {
+                form.style.display = 'none';
+            }
+        }
+
+        function clearProductForm() {
+            document.getElementById('productName').value = '';
+            document.getElementById('productDescription').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productTalla').value = 'Única';
+            document.getElementById('productCantidad').value = '10';
+            document.getElementById('productImage').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+        }
+
+        // Función para previsualizar imagen
+        function previewImage(input) {
+            const file = input.files[0];
+            const preview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+
+            if (file) {
+                // Validar tamaño (5MB máximo)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('La imagen es demasiado grande. Máximo 5MB permitido.');
+                    input.value = '';
+                    preview.style.display = 'none';
+                    return;
+                }
+
+                // Validar formato
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Formato no permitido. Use JPG, PNG o WEBP.');
+                    input.value = '';
+                    preview.style.display = 'none';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        }
+
+
+
+        function cancelAddProduct() {
+            document.getElementById('addProductForm').style.display = 'none';
+            clearProductForm();
+        }
+
+        async function createProduct() {
+            const name = document.getElementById('productName').value.trim();
+            const description = document.getElementById('productDescription').value.trim();
+            const price = document.getElementById('productPrice').value;
+            const talla = document.getElementById('productTalla').value;
+            const cantidad = document.getElementById('productCantidad').value;
+            const imageFile = document.getElementById('productImage').files[0];
+
+            // Validaciones
+            if (!name) {
+                showResult('products', 'Error: El nombre del producto es obligatorio', true);
+                return;
+            }
+
+            if (!description) {
+                showResult('products', 'Error: La descripción del producto es obligatoria', true);
+                return;
+            }
+
+            if (!price || parseFloat(price) < 0) {
+                showResult('products', 'Error: El precio debe ser un número válido mayor o igual a 0', true);
+                return;
+            }
+
+            if (!cantidad || parseInt(cantidad) < 0) {
+                showResult('products', 'Error: La cantidad debe ser un número válido mayor o igual a 0', true);
+                return;
+            }
+
+            showLoading('products');
+
+            try {
+                // Crear FormData para enviar archivo e información del producto
+                const formData = new FormData();
+                formData.append('nombre', name);
+                formData.append('descripcion', description);
+                formData.append('precio', parseFloat(price));
+                formData.append('talla', talla);
+                formData.append('cantidad', parseInt(cantidad));
+                
+                // Agregar imagen si se seleccionó una
+                if (imageFile) {
+                    showResult('products', 'Subiendo producto con imagen...', false);
+                    formData.append('imagen', imageFile);
+                } else {
+                    showResult('products', 'Guardando producto...', false);
+                }
+
+                const response = await fetch(`${API_BASE_URL}/api/products`, {
+                    method: 'POST',
+                    body: formData  // No establecer Content-Type, fetch lo hará automáticamente para FormData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const imageStatus = data.imageUploaded ? '\n✅ Imagen subida correctamente' : '';
+                    showResult('products', `✅ Producto creado exitosamente!\n\nID: ${data.data.id}\nNombre: ${data.data.nombre}\nPrecio: $${data.data.precio}${imageStatus}`, false);
+                    cancelAddProduct();
+                    // Actualizar la lista de productos automáticamente
+                    setTimeout(() => {
+                        getAllProducts();
+                    }, 1000);
+                } else {
+                    showResult('products', `Error al crear producto: ${data.message}`, true);
+                }
+            } catch (error) {
+                showResult('products', `Error: ${error.message}`, true);
+            }
+        }
+
+        // Función para eliminar productos
+        function deleteProduct(productId) {
+            if (!confirm(`¿Estás seguro de que quieres eliminar el producto con ID: ${productId}?`)) {
+                return;
+            }
+
+            showLoading('products');
+
+            fetch(`${API_BASE_URL}/api/products/${productId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showResult('products', `✅ Producto eliminado exitosamente!\n\nID eliminado: ${productId}`, false);
+                    // Actualizar la lista de productos automáticamente
+                    setTimeout(() => {
+                        getAllProducts();
+                    }, 1000);
+                } else {
+                    showResult('products', `Error al eliminar producto: ${data.message}`, true);
+                }
+            })
+            .catch(error => {
+                showResult('products', `Error de conexión: ${error.message}`, true);
+            });
+        }
+
+        // Check server status periodically
+        setInterval(checkServerStatus, 30000);
+
+        // Close modal when clicking outside
+        document.getElementById('successModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

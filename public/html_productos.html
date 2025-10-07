@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Productos - Sistema de Automatización</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: rgb(199, 199, 199);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 35px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 2.2em;
+            font-weight: 600;
+            margin: 0;
+        }
+        .btn-back {
+            background-color: #2c3e50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-back:hover {
+            background-color: #34495e;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #2c3e50;
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #e74c3c;
+            font-size: 16px;
+            background: #f8d7da;
+            border: 1px solid #e74c3c;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .products-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .product-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #2c3e50;
+        }
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 2px solid #f1f3f4;
+        }
+        .product-image-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 16px;
+            border-bottom: 2px solid #f1f3f4;
+        }
+        .product-content {
+            padding: 20px;
+        }
+        .product-id {
+            background: #2c3e50;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        .product-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+        .product-description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        .product-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #27ae60;
+            margin-bottom: 12px;
+        }
+        .product-category {
+            background: #f1f3f4;
+            color: #495057;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: inline-block;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+        .product-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f1f3f4;
+        }
+        .btn-action {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-edit {
+            background-color: #2c3e50;
+            color: white;
+        }
+        .btn-edit:hover {
+            background-color: #2c3e50;
+            transform: translateY(-1px);
+        }
+        .btn-delete {
+            background-color: #2c3e50;
+            color: white;
+        }
+        .btn-delete:hover {
+            background-color: #2c3e50;
+            transform: translateY(-1px);
+        }
+        .no-products {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 18px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Lista de Productos</h1>
+            <a href="index.html" class="btn-back">← Volver al Panel</a>
+        </div>
+        
+        <div id="loading" class="loading">
+            🔄 Cargando productos...
+        </div>
+        
+        <div id="products-info" class="products-info" style="display: none;"></div>
+        <div id="products-container"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000';
+
+        // Cargar productos al iniciar la página
+        window.onload = function() {
+            loadProducts();
+        };
+
+        function loadProducts() {
+            console.log('Cargando productos...');
+            
+            fetch(API_BASE_URL + '/api/products')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Productos obtenidos:', data);
+                    console.log('Primer producto:', data.data?.[0]); // Para ver la estructura exacta
+                    displayProducts(data);
+                })
+                .catch(error => {
+                    console.error('Error al obtener productos:', error);
+                    showError('Error al cargar productos: ' + error.message);
+                });
+        }
+
+        function displayProducts(data) {
+            const loadingEl = document.getElementById('loading');
+            const infoEl = document.getElementById('products-info');
+            const containerEl = document.getElementById('products-container');
+            
+            // Ocultar loading
+            loadingEl.style.display = 'none';
+            
+            try {
+                let products = [];
+                
+                // Detectar diferentes formatos de respuesta
+                if (Array.isArray(data)) {
+                    products = data;
+                } else if (data && data.products && Array.isArray(data.products)) {
+                    products = data.products;
+                } else if (data && data.data && Array.isArray(data.data)) {
+                    products = data.data;
+                } else if (data && typeof data === 'object') {
+                    products = [data];
+                }
+                
+                if (products.length > 0) {
+                    // Mostrar información
+                    infoEl.style.display = 'block';
+                    infoEl.innerHTML = `Total de productos encontrados: ${products.length}`;
+                    
+                    // Crear grid de productos
+                    let html = '<div class="products-grid">';
+                    
+                    products.forEach(product => {
+                        if (product && typeof product === 'object') {
+                            const productId = product.id || product.Id || product.ID || 'N/A';
+                            const productImage = product.imagen_url || product.image || product.imagen || product.Image || product.photo || product.foto || null;
+                            
+                            // Debug log para ver las imágenes
+                            console.log(`Producto ${productId}:`, {
+                                imagen_url: product.imagen_url,
+                                image: product.image,
+                                imagen: product.imagen,
+                                productImage: productImage
+                            });
+                            
+                            html += `
+                                <div class="product-card">
+                                    ${productImage ? 
+                                        `<img src="${productImage}" alt="Imagen del producto" class="product-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                         <div class="product-image-placeholder" style="display:none;">📷 Sin imagen</div>` : 
+                                        `<div class="product-image-placeholder">📷 Sin imagen</div>`
+                                    }
+                                    <div class="product-content">
+                                        <div class="product-id">ID: ${productId}</div>
+                                        <div class="product-name">${product.nombre || product.name || product.Name || product.title || product.titulo || 'Producto sin nombre'}</div>
+                                        <div class="product-description">${product.descripcion || product.description || product.Description || product.desc || 'Sin descripción disponible'}</div>
+                                        <div class="product-price">$${product.precio || product.price || product.Price || product.cost || product.costo || '0.00'}</div>
+                                        <div class="product-category">${product.category || product.categoria || product.Category || product.type || product.tipo || 'Sin categoría'}</div>
+                                        <div class="product-actions">
+                                            <button class="btn-action btn-edit" onclick="editProduct('${productId}')">Editar</button>
+                                            <button class="btn-action btn-delete" onclick="deleteProduct('${productId}')">Eliminar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    html += '</div>';
+                    containerEl.innerHTML = html;
+                } else {
+                    containerEl.innerHTML = '<div class="no-products">No se encontraron productos en la base de datos.</div>';
+                }
+            } catch (error) {
+                console.error('Error al procesar productos:', error);
+                showError('Error al procesar los datos de productos');
+            }
+        }
+
+        function showError(message) {
+            const loadingEl = document.getElementById('loading');
+            const containerEl = document.getElementById('products-container');
+            
+            loadingEl.style.display = 'none';
+            containerEl.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        // Función para editar producto
+        function editProduct(productId) {
+            console.log('Editando producto ID:', productId);
+            
+            // Confirmar acción
+            if (confirm(`¿Estás seguro de que quieres editar el producto con ID ${productId}?`)) {
+                // Aquí puedes implementar la lógica de edición
+                // Por ejemplo, abrir un modal o redirigir a una página de edición
+                alert(`Función de edición para producto ${productId} - Implementar según tus necesidades`);
+                
+                // Ejemplo de redirección a página de edición:
+                // window.location.href = `editar-producto.html?id=${productId}`;
+                
+                // O hacer una llamada a la API para obtener los datos del producto:
+                // fetch(API_BASE_URL + '/api/products/' + productId)
+                //     .then(response => response.json())
+                //     .then(data => {
+                //         // Abrir modal o formulario con los datos del producto
+                //     });
+            }
+        }
+
+        // Función para eliminar producto
+        function deleteProduct(productId) {
+            console.log('Eliminando producto ID:', productId);
+            
+            // Confirmar acción
+            if (confirm(`¿Estás seguro de que quieres ELIMINAR el producto con ID ${productId}? Esta acción no se puede deshacer.`)) {
+                // Mostrar loading
+                const confirmDelete = confirm('¿Estás COMPLETAMENTE seguro? Esta acción es irreversible.');
+                
+                if (confirmDelete) {
+                    // Hacer la llamada DELETE a la API
+                    fetch(API_BASE_URL + '/api/products/' + productId, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            alert('Producto eliminado exitosamente');
+                            // Recargar la lista de productos
+                            loadProducts();
+                        } else {
+                            throw new Error('Error en el servidor al eliminar');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al eliminar producto:', error);
+                        alert('Error al eliminar el producto: ' + error.message);
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>
