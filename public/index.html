@@ -2036,7 +2036,7 @@
                         <!-- Info Card arriba -->
                         <div class="email-info-card-top">
                             <div class="info-icon-bolt">
-                                <i class="fas fa-check"></i>
+                                <i class="fas fa-brain"></i>
                             </div>
                             <div class="info-content-bolt">
                                 <h4>Sistema de Envío Automático</h4>
@@ -2213,12 +2213,9 @@
         }
 
         function openEnterpriseDashboard() {
-            // Abrir Dashboard Empresarial en nueva pestaña
+            // Abrir Dashboard Empresarial en la misma pestaña
             const dashboardUrl = `./dashboard-empresarial.html`;
-            window.open(dashboardUrl, '_blank');
-            
-            // Mostrar notificación
-            showNotification('🚀 Abriendo Dashboard Empresarial...', 'info');
+            window.location.href = dashboardUrl;
             
             // Close sidebar on mobile
             if (window.innerWidth <= 768) {

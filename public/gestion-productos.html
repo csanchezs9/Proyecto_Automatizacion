@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Productos - Cyntex</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * {
@@ -13,70 +14,94 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
             min-height: 100vh;
-            color: #e2e8f0;
+            color: #ffffff;
             margin: 0;
             padding: 0;
         }
 
-        .header {
-            background: rgba(30, 41, 59, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 20px;
+        .navbar {
+            background: linear-gradient(135deg, #0f172a, #1e293b) !important;
+            border-bottom: 1px solid #334155;
+            padding: 1rem 0;
             box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
-            margin-bottom: 30px;
-            border-bottom: 1px solid rgba(59, 130, 246, 0.3);
         }
 
-        .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-        }
-
-        .back-arrow {
-            color: #ffffff;
+        .navbar-brand {
+            color: #ffffff !important;
             font-size: 1.5rem;
-            text-decoration: none;
-            transition: color 0.3s ease;
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .back-arrow:hover {
-            color: #3b82f6;
-        }
-
-        .spacer {
-            width: 1.5rem;
-        }
-
-        .header h1 {
-            color: #3b82f6;
-            font-size: 2.5rem;
             font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin: 0;
-            flex: 1;
-            justify-content: center;
+            gap: 10px;
         }
 
-        .header-actions {
+        .navbar-brand i {
+            color: #00d4ff;
+        }
+
+        /* Estilos para el botón de volver */
+        .back-btn {
+            background: rgba(30, 41, 59, 0.5);
+            border: 2px solid #00d4ff;
+            color: #00d4ff;
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
             display: flex;
-            gap: 15px;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .back-btn:hover {
+            background: #00d4ff;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 212, 255, 0.3);
+        }
+
+        .back-btn i {
+            transition: transform 0.3s ease;
+        }
+
+        .back-btn:hover i {
+            transform: translateX(-2px);
+        }
+
+        .status-badge {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge i {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .last-update {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-left: 1rem;
         }
 
         .btn {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            background: linear-gradient(135deg, #00d4ff, #0ea5e9);
             color: white;
             border: none;
             padding: 12px 24px;
@@ -89,23 +114,23 @@
             align-items: center;
             gap: 8px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
         }
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
-            background: linear-gradient(135deg, #2563eb, #1e40af);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.6);
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
         }
 
         .btn-secondary {
-            background: rgba(51, 65, 85, 0.8);
+            background: linear-gradient(135deg, #334155, #475569);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
         .btn-secondary:hover {
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
-            background: rgba(71, 85, 105, 0.9);
+            background: linear-gradient(135deg, #475569, #64748b);
         }
 
         .container {
@@ -122,30 +147,31 @@
         }
 
         .stat-card {
-            background: rgba(30, 41, 59, 0.8);
+            background: linear-gradient(135deg, #1e293b, #334155);
             backdrop-filter: blur(10px);
             padding: 25px;
             border-radius: 15px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
             text-align: center;
             transition: transform 0.3s ease;
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            border: 1px solid #475569;
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
-            border-color: rgba(59, 130, 246, 0.4);
+            border-color: #00d4ff;
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
         }
 
         .stat-card i {
             font-size: 2.5rem;
-            color: #3b82f6;
+            color: #00d4ff;
             margin-bottom: 10px;
         }
 
         .stat-card h3 {
             font-size: 1.8rem;
-            color: #e2e8f0;
+            color: #ffffff;
             margin-bottom: 5px;
         }
 
@@ -155,12 +181,12 @@
         }
 
         .products-container {
-            background: rgba(30, 41, 59, 0.8);
+            background: linear-gradient(135deg, #0f172a, #1e293b);
             backdrop-filter: blur(10px);
-            border-radius: 15px;
+            border-radius: 20px;
             padding: 30px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            border: 1px solid #334155;
         }
 
         .products-header {
@@ -169,11 +195,11 @@
             align-items: center;
             margin-bottom: 25px;
             padding-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
+            border-bottom: 2px solid #475569;
         }
 
         .products-header h2 {
-            color: #e2e8f0;
+            color: #ffffff;
             font-size: 1.8rem;
         }
 
@@ -186,7 +212,7 @@
         .refresh-icon {
             background: transparent;
             border: none;
-            color: #3b82f6;
+            color: #00d4ff;
             font-size: 1.2rem;
             cursor: pointer;
             padding: 8px;
@@ -195,7 +221,7 @@
         }
 
         .refresh-icon:hover {
-            background: rgba(59, 130, 246, 0.1);
+            background: rgba(0, 212, 255, 0.1);
             color: #60a5fa;
             transform: rotate(360deg);
         }
@@ -219,7 +245,7 @@
 
         .search-input:focus {
             outline: none;
-            border-color: #3b82f6;
+            border-color: #00d4ff;
         }
 
         .search-input::placeholder {
@@ -233,18 +259,18 @@
         }
 
         .product-card {
-            background: rgba(51, 65, 85, 0.8);
+            background: rgba(30, 41, 59, 0.8);
             border-radius: 12px;
             padding: 20px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             transition: all 0.3s ease;
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            border: 1px solid #334155;
         }
 
         .product-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
-            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.2);
+            border-color: #00d4ff;
         }
 
         .product-image {
@@ -281,14 +307,12 @@
         }
 
         .product-id {
-            background: #3b82f6;
-            color: white;
-            padding: 4px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            color: #00d4ff;
+            font-size: 0.85rem;
+            font-weight: 700;
             display: inline-block;
             margin-bottom: 10px;
+            letter-spacing: 0.5px;
         }
 
         .product-price {
@@ -359,7 +383,7 @@
             text-align: center;
             padding: 50px;
             font-size: 1.2rem;
-            color: #3b82f6;
+            color: #00d4ff;
         }
 
         .loading i {
@@ -451,17 +475,30 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-content">
-            <a href="/index.html" class="back-arrow">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <!-- Botón de volver -->
+            <button onclick="goBack()" class="back-btn me-3" title="Volver al Sistema Principal">
                 <i class="fas fa-arrow-left"></i>
-            </a>
-            <h1><i class="fas fa-boxes"></i> Gestión de Productos</h1>
-            <div class="spacer"></div>
+                <span class="d-none d-sm-inline">Volver</span>
+            </button>
+            
+            <span class="navbar-brand">
+                <i class="fas fa-boxes"></i>
+                Gestión de Productos
+            </span>
+            <div class="d-flex align-items-center">
+                <span class="status-badge">
+                    <i class="fas fa-circle"></i>
+                    Sistema Activo
+                </span>
+                <span class="last-update" id="lastUpdate">Última actualización: Cargando...</span>
+            </div>
         </div>
-    </div>
+    </nav>
 
-    <div class="container">
+    <div class="container" style="margin-top: 30px;">
         <!-- Estadísticas -->
         <div class="stats-grid" id="statsContainer">
             <!-- Las estadísticas se cargarán aquí -->
@@ -523,10 +560,36 @@
         const API_BASE_URL = window.location.origin;
         let allProducts = [];
 
+        // Go back to main system
+        function goBack() {
+            try {
+                if (document.referrer && document.referrer !== '') {
+                    window.location.href = document.referrer;
+                } else if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = '/index.html';
+                }
+            } catch (error) {
+                console.error('Error al volver:', error);
+                window.location.href = '/index.html';
+            }
+        }
+
+        // Actualizar timestamp
+        function updateLastUpdate() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('lastUpdate').textContent = `Última actualización: ${timeString}`;
+        }
+
         // Cargar productos y estadísticas al iniciar
         window.onload = function() {
             loadProducts();
             loadStats();
+            updateLastUpdate();
+            // Actualizar cada minuto
+            setInterval(updateLastUpdate, 60000);
         };
 
         async function loadProducts() {
@@ -744,5 +807,8 @@
             loadStats();
         }
     </script>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
